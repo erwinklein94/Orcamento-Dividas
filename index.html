@@ -1,12 +1,8 @@
 <!doctype html>
-<!-- Site estático compatível com GitHub Pages: publique este arquivo como index.html na raiz do repositório. -->
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Painel financeiro estático para acompanhar dívidas, orçamento líquido e simulações de amortização.">
-<meta name="theme-color" content="#0B3D2E">
-<meta name="robots" content="noindex,nofollow">
 <title>Painel de Dívidas — Família Klein</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -117,6 +113,7 @@
   .mrow .mname{font-weight:700;font-size:15.5px;text-transform:capitalize;min-width:128px}
   .mrow .pill{font-size:11px;font-weight:700;color:var(--ink-soft);background:var(--paper-2);border:1px solid var(--line);border-radius:999px;padding:3px 9px}
   .mrow .pill.card{color:var(--copper);background:#f6ece2;border-color:#ecd9c5}
+  .mrow .pill.bonus{color:var(--pos);background:var(--pos-soft);border-color:#cfe6da}
   .mrow .mtotal{font-family:'Spline Sans Mono';font-weight:600;font-size:18px;letter-spacing:-.02em}
   .mrow .mright{margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:1px}
   .mrow .msobra{font-family:'Spline Sans Mono';font-size:12px;font-weight:600;letter-spacing:-.02em}
@@ -232,24 +229,13 @@
   .crow .del:hover{color:var(--red);border-color:#e6cfca;background:var(--red-soft)}
   .bgtot{display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding-top:13px;border-top:2px solid var(--line-strong);font-weight:700;font-size:14px}
   .bgtot b{font-family:'Spline Sans Mono';font-size:19px;letter-spacing:-.02em}
-  .paycard{background:#fdfcf9;border:1px solid var(--line);border-radius:13px;padding:13px 14px;margin:10px 0;box-shadow:0 1px 2px rgba(23,31,27,.03)}
-  .paytop{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:10px}
-  .paytop h4{font-family:'Fraunces';font-weight:600;font-size:17px}
-  .paytop .net{font-family:'Spline Sans Mono';font-weight:700;color:var(--green);font-size:18px;letter-spacing:-.02em;white-space:nowrap}
-  .paygrid{display:grid;grid-template-columns:1fr 88px 1fr;gap:8px;align-items:end}
-  .payfield label{display:block;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-soft);margin:0 0 4px 2px}
-  .payfield .min{width:100%}
-  .payfield.small .min input{text-align:center;padding-left:8px;padding-right:8px}
-  .paycalc{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-top:10px}
-  .paycalc .pcell{background:#f8f5ee;padding:8px 9px}
-  .paycalc .k{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-soft)}
-  .paycalc .v{font-family:'Spline Sans Mono';font-weight:600;font-size:12.5px;letter-spacing:-.02em;margin-top:1px}
-  .paycalc .v.red{color:var(--red)}
-  @media (max-width:720px){
-    .budgrid{grid-template-columns:1fr}
-    .min{width:118px}
-    .paygrid{grid-template-columns:1fr}
-    .paycalc{grid-template-columns:1fr 1fr}
+  .depbox{display:flex;align-items:center;gap:4px;border:1.5px solid var(--line);border-radius:10px;background:#fdfcf9;padding:0 7px 0 10px;height:38px;flex:0 0 auto}
+  .depbox span{font-size:10px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.02em}
+  .depbox input{width:30px;border:0;outline:0;background:transparent;font-family:'Spline Sans Mono';font-weight:600;font-size:15px;text-align:center;color:var(--ink)}
+  .liqline{font-size:11.5px;color:var(--ink-soft);padding:0 2px 9px 4px;margin-top:-3px}
+  .liqline b{color:var(--pos);font-family:'Spline Sans Mono';font-weight:600}
+  @media (max-width:720px){ .budgrid{grid-template-columns:1fr} .min{width:118px} }
+
     .hero .split{gap:18px}
     .mrow .mname{min-width:auto}
     .drow .dmeta{display:none}
@@ -327,9 +313,9 @@
     <div class="hero">
       <div class="k">Sobra estimada — próximo mês (junho/2026)</div>
       <div class="big num" id="orcBig">R$ 0,00</div>
-      <div class="when">renda líquida da família − custos de vida − parcelas das dívidas</div>
+      <div class="when">renda da família − custos de vida − parcelas das dívidas</div>
       <div class="split">
-        <div class="it"><div class="v num" id="orcRenda">R$ 0,00</div><div class="t">Renda líquida da família</div></div>
+        <div class="it"><div class="v num" id="orcRenda">R$ 0,00</div><div class="t">Renda da família</div></div>
         <div class="it"><div class="v num" id="orcCustos">R$ 0,00</div><div class="t">Custos de vida</div></div>
         <div class="it"><div class="v num" id="orcDiv">R$ 0,00</div><div class="t">Parcelas (junho)</div></div>
       </div>
@@ -337,10 +323,10 @@
 
     <div class="budgrid">
       <div class="panel">
-        <h3>Renda mensal líquida</h3>
-        <p class="lead">Informe o salário bruto de cada um. O painel calcula INSS e IRRF pela tabela brasileira de 2026 e usa o <b>salário líquido</b> em todos os cálculos. O vale alimentação continua separado como benefício líquido.</p>
+        <h3>Renda mensal</h3>
+        <p class="lead">Informe o salário <b>bruto</b> — o painel calcula o líquido com os descontos de INSS e Imposto de Renda (tabelas 2026). O vale alimentação é isento. Ajuste os dependentes para o IR ficar exato.</p>
         <div id="rendaList"></div>
-        <div class="bgtot"><span>Total da renda</span><b id="rendaTot" class="num">R$ 0,00</b></div>
+        <div class="bgtot"><span>Renda líquida total</span><b id="rendaTot" class="num">R$ 0,00</b></div>
       </div>
       <div class="panel">
         <h3>Custos de vida <button class="addbtn" id="addCusto">+ adicionar</button></h3>
@@ -348,6 +334,11 @@
         <div id="custosList"></div>
         <div class="bgtot"><span>Total dos custos</span><b id="custosTot" class="num">R$ 0,00</b></div>
       </div>
+    </div>
+    <div class="panel" style="margin-top:14px">
+      <h3>Recebimentos anuais</h3>
+      <p class="lead">Entradas extras que caem em meses específicos. O 13º é calculado a partir dos salários; o PPR da Raquel é editável (≈ 4 a 5× o salário bruto).</p>
+      <div id="recebList"></div>
     </div>
     <div class="note" id="orcNote"></div>
   </section>
@@ -566,7 +557,8 @@ function renderCrono(){
       const tot = mo.fix + (includeCard?mo.card:0);
       const hasCard = mo.card>0;
       const detItems = mo.items.filter(d=> includeCard || !d.tipoCartao);
-      const sobra = rendaTotal() - custosTotal() - tot;
+      const extra = extrasAt(mo.m);
+      const sobra = rendaTotal() - custosTotal() - tot + extra.total;
       const showSobra = (owner==="todos");
       let det="";
       detItems.forEach(d=>{
@@ -578,9 +570,10 @@ function renderCrono(){
           <span class="dval">${BRL(d.parcela)}</span></div>`;
       });
       const budgetBlock = showSobra ? `<div class="mbudget">
-          <span>renda líquida <b>${BRL(rendaTotal())}</b></span>
+          <span>renda <b>${BRL(rendaTotal())}</b></span>
           <span>− custos <b>${BRL(custosTotal())}</b></span>
           <span>− parcelas <b>${BRL(tot)}</b></span>
+          ${extra.total>0?`<span>+ ${extra.labels.join("/")} <b style="color:var(--pos)">${BRL(extra.total)}</b></span>`:''}
           <span class="eq ${sobra>=0?'pos':'neg'}">= sobra ${BRL(sobra)}</span>
         </div>` : '';
       html += `<div class="mrow" onclick="this.classList.toggle('open')">
@@ -588,6 +581,7 @@ function renderCrono(){
           <span class="mname">${MESES[mo.m-1]}</span>
           <span class="pill">${detItems.length} parc.</span>
           ${(hasCard&&includeCard)?'<span class="pill card">+ cartão</span>':''}
+          ${(showSobra&&extra.total>0)?`<span class="pill bonus">+ ${extra.labels.join("/")}</span>`:''}
           <div class="mright">
             <span class="mtotal">${BRL(tot)}</span>
             ${showSobra?`<span class="msobra ${sobra>=0?'pos':'neg'}">sobra ${BRL(sobra)}</span>`:''}
@@ -785,27 +779,11 @@ document.getElementById("cardtoggle").addEventListener("click", ()=>{
 });
 
 /* ============ ORÇAMENTO: renda + custos editáveis ============ */
-const INSS_2026 = [
-  {ate:1621.00, aliq:0.075},
-  {ate:2902.84, aliq:0.09},
-  {ate:4354.27, aliq:0.12},
-  {ate:8475.55, aliq:0.14},
-];
-const IRRF_2026 = [
-  {ate:2428.80, aliq:0, ded:0},
-  {ate:2826.65, aliq:0.075, ded:182.16},
-  {ate:3751.05, aliq:0.15, ded:394.16},
-  {ate:4664.68, aliq:0.225, ded:675.49},
-  {ate:Infinity, aliq:0.275, ded:908.73},
-];
-const DEP_IRRF_2026 = 189.59;
-const DESC_SIMPLIFICADO_IRRF_2026 = 607.20;
-
 let renda = [
-  {pessoa:"Raquel", tipo:"Salário", categoria:"salario", bruto:10911, dependentes:0, outros:0},
-  {pessoa:"Erwin",  tipo:"Salário", categoria:"salario", bruto:4130,  dependentes:0, outros:0},
-  {pessoa:"Raquel", tipo:"Vale alimentação", categoria:"beneficio", valor:1116},
-  {pessoa:"Erwin",  tipo:"Vale alimentação", categoria:"beneficio", valor:735},
+  {pessoa:"Raquel", tipo:"Salário", valor:10911, tributavel:true, dependentes:0},
+  {pessoa:"Erwin",  tipo:"Salário", valor:4130,  tributavel:true, dependentes:0},
+  {pessoa:"Raquel", tipo:"Vale alimentação", valor:1116, tributavel:false},
+  {pessoa:"Erwin",  tipo:"Vale alimentação", valor:735,  tributavel:false},
 ];
 let custos = [
   {grupo:"Contas da casa", nome:"Aluguel + condomínio", valor:2230},
@@ -816,43 +794,56 @@ let custos = [
   {grupo:"Educação", nome:"Educação", valor:1935},
   {grupo:"Transporte", nome:"Combustível", valor:500},
 ];
-function calcINSS(bruto){
-  let restante = Math.max(0, bruto), anterior = 0, total = 0;
-  for(const faixa of INSS_2026){
-    const baseFaixa = Math.max(0, Math.min(restante, faixa.ate - anterior));
-    total += baseFaixa * faixa.aliq;
-    restante -= baseFaixa;
-    anterior = faixa.ate;
-    if(restante <= 0) break;
-  }
-  return Math.round(total*100)/100;
+/* Descontos sobre salário no Brasil — tabelas 2026 (INSS Portaria MPS/MF 13/2026; IRRF Reforma do IR) */
+function inss2026(bruto){
+  const faixas=[[1621.00,0.075],[2902.84,0.09],[4354.27,0.12],[8475.55,0.14]]; // teto R$ 8.475,55
+  const b=Math.min(+bruto||0, 8475.55); let t=0, prev=0;
+  for(const [lim,al] of faixas){ if(b>prev){ t+=(Math.min(b,lim)-prev)*al; prev=lim; } else break; }
+  return t;
 }
-function calcIRRFProgressivo(base){
-  const faixa = IRRF_2026.find(f=>base <= f.ate) || IRRF_2026[IRRF_2026.length-1];
-  return Math.max(0, Math.round((base*faixa.aliq - faixa.ded)*100)/100);
+function tabelaIR2026(base){
+  if(base<=2428.80) return 0;
+  if(base<=2826.65) return base*0.075-182.16;
+  if(base<=3751.05) return base*0.15-394.16;
+  if(base<=4664.68) return base*0.225-675.49;
+  return base*0.275-908.73;
 }
-function calcSalario(r){
-  const bruto = +r.bruto || 0;
-  const inss = calcINSS(bruto);
-  const dep = (+r.dependentes || 0) * DEP_IRRF_2026;
-  const deducaoLegal = inss + dep;
-  const deducaoUsada = Math.max(deducaoLegal, DESC_SIMPLIFICADO_IRRF_2026);
-  const baseIR = Math.max(0, bruto - deducaoUsada);
-  const irCheio = calcIRRFProgressivo(baseIR);
-  let reducao = 0;
-  if(bruto <= 5000) reducao = Math.min(irCheio, 312.89);
-  else if(bruto <= 7350) reducao = Math.min(irCheio, Math.max(0, 978.62 - (0.133145 * bruto)));
-  const irrf = Math.max(0, Math.round((irCheio - reducao)*100)/100);
-  const outros = +r.outros || 0;
-  const liquido = Math.max(0, Math.round((bruto - inss - irrf - outros)*100)/100);
-  return {bruto, inss, dep, deducaoUsada, baseIR, irCheio, reducao, irrf, outros, liquido};
+function irrf2026(bruto, dependentes){
+  bruto=+bruto||0;
+  const ded=Math.max(inss2026(bruto)+(dependentes||0)*189.59, 607.20); // dedução legal ou desconto simplificado
+  let imp=Math.max(0, tabelaIR2026(Math.max(0, bruto-ded)));
+  if(bruto<=5000) imp=0;                                                 // isenção 2026 até R$ 5.000/mês
+  else if(bruto<=7350) imp=Math.max(0, imp-Math.max(0, 978.62-0.133145*bruto)); // redução gradual até R$ 7.350
+  return imp;
 }
-function rendaValor(r){ return r.categoria==="salario" ? calcSalario(r).liquido : (+r.valor || 0); }
-const rendaTotal = ()=> renda.reduce((a,r)=>a+rendaValor(r),0);
-const salariosBrutosTotal = ()=> renda.filter(r=>r.categoria==="salario").reduce((a,r)=>a+(+r.bruto||0),0);
-const descontosFolhaTotal = ()=> renda.filter(r=>r.categoria==="salario").reduce((a,r)=>{ const c=calcSalario(r); return a+c.inss+c.irrf+c.outros; },0);
-const beneficiosTotal = ()=> renda.filter(r=>r.categoria==="beneficio").reduce((a,r)=>a+(+r.valor||0),0);
+function liquidoOf(r){ return r.tributavel ? Math.max(0,(+r.valor||0)-inss2026(r.valor)-irrf2026(r.valor,r.dependentes||0)) : (+r.valor||0); }
+const rendaTotal = ()=> renda.reduce((a,r)=>a+liquidoOf(r),0);
 const custosTotal = ()=> custos.reduce((a,c)=>a+(+c.valor||0),0);
+
+/* IRRF exclusivo de PLR/PPR — tabela 2026 (Min. Fazenda). Sem INSS, sem dependentes. */
+function plrIR2026(v){
+  v=+v||0;
+  if(v<=8214.40) return 0;
+  if(v<=9922.28) return v*0.075-616.08;
+  if(v<=13167.00) return v*0.15-1360.35;
+  if(v<=16380.38) return v*0.225-2347.85;
+  return v*0.275-3166.58;
+}
+/* Recebimentos anuais: 13º (dez, ambos) e PPR (abr, só Raquel) */
+let recebimentos = [
+  {nome:"13º salário", mes:12, tipo:"13"},
+  {nome:"PPR", mes:4, tipo:"ppr", pessoa:"Raquel", bruto:49099.50}, // ~4,5× o salário bruto da Raquel
+];
+const liquido13Total = ()=> renda.filter(r=>r.tributavel).reduce((a,r)=>a+liquidoOf(r),0); // 13º não tem vale
+function extrasAt(mesDoAno){
+  let total=0; const labels=[];
+  for(const e of recebimentos){
+    if(e.mes!==mesDoAno) continue;
+    if(e.tipo==="13"){ total+=liquido13Total(); labels.push("13º"); }
+    else if(e.tipo==="ppr"){ total+=(+e.bruto||0)-plrIR2026(e.bruto); labels.push("PPR"); }
+  }
+  return {total, labels};
+}
 const esc = s => String(s||"").replace(/"/g,"&quot;");
 
 // dívidas da família ativas em um mês k (ignora o filtro de titular — contas pagas juntos)
@@ -865,32 +856,27 @@ function familyDebtAt(k){
 }
 
 function renderOrcamentoInputs(){
-  const salarios = renda.map((r,i)=>({r,i})).filter(x=>x.r.categoria==="salario");
-  const beneficios = renda.map((r,i)=>({r,i})).filter(x=>x.r.categoria==="beneficio");
-  let rl = `<div class="grphdr first">Salários líquidos calculados</div>`;
-  salarios.forEach(({r,i})=>{
-    const c = calcSalario(r);
-    rl += `<div class="paycard">
-      <div class="paytop"><h4>${esc(r.pessoa)}</h4><div class="net">${BRL(c.liquido)}</div></div>
-      <div class="paygrid">
-        <div class="payfield"><label>Salário bruto</label><div class="min"><span class="pre">R$</span><input data-sbruto="${i}" inputmode="decimal" value="${BRLc(r.bruto)}"></div></div>
-        <div class="payfield small"><label>Depend.</label><div class="min"><input data-sdep="${i}" inputmode="numeric" value="${r.dependentes||0}"></div></div>
-        <div class="payfield"><label>Outros descontos</label><div class="min"><span class="pre">R$</span><input data-soutro="${i}" inputmode="decimal" value="${BRLc(r.outros||0)}"></div></div>
-      </div>
-      <div class="paycalc">
-        <div class="pcell"><div class="k">INSS</div><div class="v red">− ${BRL(c.inss)}</div></div>
-        <div class="pcell"><div class="k">IRRF</div><div class="v red">− ${BRL(c.irrf)}</div></div>
-        <div class="pcell"><div class="k">Base IR</div><div class="v">${BRL(c.baseIR)}</div></div>
-        <div class="pcell"><div class="k">Desc. total</div><div class="v red">− ${BRL(c.inss+c.irrf+c.outros)}</div></div>
-      </div>
-    </div>`;
-  });
-  rl += `<div class="grphdr">Benefícios líquidos</div>`;
-  beneficios.forEach(({r,i})=>{
-    rl += `<div class="crow">
-      <div style="flex:1;min-width:0;padding-left:2px"><div style="font-weight:600;font-size:13.5px">${esc(r.pessoa)} · ${esc(r.tipo)}</div></div>
-      <div class="min"><span class="pre">R$</span><input data-beneficio="${i}" inputmode="decimal" value="${BRLc(r.valor)}"></div>
-    </div>`;
+  const rgroups=[];
+  renda.forEach((r,i)=>{ let g=rgroups.find(x=>x.p===r.pessoa); if(!g){g={p:r.pessoa,items:[]};rgroups.push(g);} g.items.push({r,i}); });
+  let rl="";
+  rgroups.forEach((g,gi)=>{
+    rl += `<div class="grphdr${gi===0?' first':''}">${esc(g.p)}</div>`;
+    g.items.forEach(({r,i})=>{
+      if(r.tributavel){
+        const inss=inss2026(r.valor), ir=irrf2026(r.valor,r.dependentes||0), liq=(+r.valor||0)-inss-ir;
+        rl += `<div class="crow">
+          <div style="flex:1;min-width:0;padding-left:2px"><div style="font-weight:600;font-size:13.5px">${esc(r.tipo)} <span style="font-size:10.5px;color:var(--ink-soft);font-weight:600">bruto</span></div></div>
+          <div class="depbox" title="Dependentes para o Imposto de Renda"><span>dep</span><input data-dep="${i}" inputmode="numeric" value="${r.dependentes||0}"></div>
+          <div class="min"><span class="pre">R$</span><input data-renda="${i}" inputmode="decimal" value="${BRLc(r.valor)}"></div>
+        </div>
+        <div class="liqline" data-liq="${i}">líquido <b>${BRL(liq)}</b> &nbsp;·&nbsp; −INSS ${BRL(inss)} &nbsp;·&nbsp; −IR ${ir>0?BRL(ir):'isento'}</div>`;
+      } else {
+        rl += `<div class="crow">
+          <div style="flex:1;min-width:0;padding-left:2px"><div style="font-weight:600;font-size:13.5px">${esc(r.tipo)} <span style="font-size:10.5px;color:var(--ink-soft);font-weight:600">isento</span></div></div>
+          <div class="min"><span class="pre">R$</span><input data-renda="${i}" inputmode="decimal" value="${BRLc(r.valor)}"></div>
+        </div>`;
+      }
+    });
   });
   document.getElementById("rendaList").innerHTML = rl;
 
@@ -910,14 +896,40 @@ function renderOrcamentoInputs(){
     });
   });
   document.getElementById("custosList").innerHTML = ch;
+  renderRecebimentos();
+}
+function renderRecebimentos(){
+  let h="";
+  recebimentos.forEach((e,i)=>{
+    if(e.tipo==="13"){
+      const nets=renda.filter(r=>r.tributavel).map(r=>({p:r.pessoa,v:liquidoOf(r)}));
+      const tot=nets.reduce((a,n)=>a+n.v,0);
+      h += `<div class="grphdr first">13º salário · dezembro · ambos</div>
+        <div class="crow"><div style="flex:1;padding-left:2px"><div style="font-weight:600;font-size:13.5px">Um salário extra de cada um</div></div>
+          <div style="text-align:right"><div class="num" style="font-weight:700;font-size:16px;color:var(--pos)">${BRL(tot)}</div></div></div>
+        <div class="liqline" data-r13="1">líquido em dez: ${nets.map(n=>`${esc(n.p)} ${BRL(n.v)}`).join(" + ")} · já com INSS e IR do 13º</div>`;
+    } else if(e.tipo==="ppr"){
+      const ir=plrIR2026(e.bruto), liq=(+e.bruto||0)-ir;
+      h += `<div class="grphdr">PPR · abril · só ${esc(e.pessoa)}</div>
+        <div class="crow">
+          <div style="flex:1;min-width:0;padding-left:2px"><div style="font-weight:600;font-size:13.5px">PPR bruto <span style="font-size:10.5px;color:var(--ink-soft);font-weight:600">≈ 4 a 5× o salário</span></div></div>
+          <div class="min"><span class="pre">R$</span><input data-ppr="${i}" inputmode="decimal" value="${BRLc(e.bruto)}"></div>
+        </div>
+        <div class="liqline" data-pprliq="${i}">líquido <b>${BRL(liq)}</b> &nbsp;·&nbsp; −IR PLR ${ir>0?BRL(ir):'isento'} &nbsp;·&nbsp; sem INSS</div>`;
+    }
+  });
+  document.getElementById("recebList").innerHTML=h;
+}
+function refreshPPR(i){
+  const e=recebimentos[i]; const el=document.querySelector(`.liqline[data-pprliq="${i}"]`); if(!el) return;
+  const ir=plrIR2026(e.bruto), liq=(+e.bruto||0)-ir;
+  el.innerHTML=`líquido <b>${BRL(liq)}</b> &nbsp;·&nbsp; −IR PLR ${ir>0?BRL(ir):'isento'} &nbsp;·&nbsp; sem INSS`;
 }
 
 function updateBudget(){
   const r=rendaTotal(), c=custosTotal(), d=familyDebtAt(START);
   const sobra=r-c-d;
-  const vale=beneficiosTotal();
-  const bruto=salariosBrutosTotal();
-  const descontos=descontosFolhaTotal();
+  const vale=renda.filter(x=>/vale/i.test(x.tipo)).reduce((a,x)=>a+(+x.valor||0),0);
   const big=document.getElementById("orcBig");
   big.textContent=BRL(sobra); big.style.color = sobra>=0 ? "#9be3c0" : "#ffb4a8";
   document.getElementById("orcRenda").textContent=BRL(r);
@@ -925,31 +937,39 @@ function updateBudget(){
   document.getElementById("orcDiv").textContent=BRL(d);
   document.getElementById("rendaTot").textContent=BRL(r);
   document.getElementById("custosTot").textContent=BRL(c);
-  const noteVale = vale>0 ? `O vale alimentação soma R$ ${BRLc(vale)}/mês e entra como benefício líquido separado. ` : "";
+  const descontos = renda.filter(r=>r.tributavel).reduce((a,r)=>a+inss2026(r.valor)+irrf2026(r.valor,r.dependentes||0),0);
+  const t13=extrasAt(12).total, tppr=extrasAt(4).total;
+  const noteVale = vale>0 ? `O vale alimentação soma R$ ${BRLc(vale)}/mês (isento) e só serve para alimentação — como o gasto de Mercado é maior, ele é totalmente aproveitado. ` : "";
   document.getElementById("orcNote").innerHTML =
-    `<b>Sobra = renda líquida da família − custos de vida − parcelas das dívidas</b>, calculada para o próximo mês (jun/2026). ` +
-    `O painel agora parte do salário bruto de <b>${BRL(bruto)}</b>, estima <b>${BRL(descontos)}</b> de INSS/IRRF/outros descontos em folha e usa <b>${BRL(r)}</b> como renda real disponível. ` +
-    `As parcelas mudam ao longo do tempo, então o saldo de cada mês aparece na aba <b>Cronograma</b>. ` +
+    `<b>Sobra = renda líquida da família − custos de vida − parcelas das dívidas</b>, para o próximo mês (jun/2026). ` +
+    `Os salários já estão <b>líquidos</b>: foram descontados R$ ${BRLc(descontos)}/mês de INSS + Imposto de Renda (tabelas 2026, com a isenção de IR até R$ 5.000). ` +
     noteVale +
-    `Use “Outros descontos” para plano de saúde, sindicato, atrasos ou qualquer desconto que apareça no contracheque. Não coloque consignados ali se eles já estão listados como dívidas, para não descontar duas vezes.`;
+    `Em <b>dezembro</b> entra o 13º (líquido ~${BRL(t13)}) e em <b>abril</b> o PPR da Raquel (líquido ~${BRL(tppr)}) — aparecem com selo verde no Cronograma. ` +
+    `O consignado e as demais parcelas são abatidos aqui no orçamento (não no salário), sem contagem dupla. Ajuste os dependentes em cada salário para o IR ficar exato.`;
 }
 
 const orcSection = document.getElementById("orc");
+function refreshLiq(i){
+  const r=renda[i]; if(!r||!r.tributavel) return;
+  const el=document.querySelector(`.liqline[data-liq="${i}"]`); if(!el) return;
+  const inss=inss2026(r.valor), ir=irrf2026(r.valor,r.dependentes||0), liq=(+r.valor||0)-inss-ir;
+  el.innerHTML=`líquido <b>${BRL(liq)}</b> &nbsp;·&nbsp; −INSS ${BRL(inss)} &nbsp;·&nbsp; −IR ${ir>0?BRL(ir):'isento'}`;
+}
+orcSection.addEventListener("focusin", e=>{ if(e.target.tagName==="INPUT"){ setTimeout(()=>{ try{ e.target.select(); }catch(_){} },0); } });
 orcSection.addEventListener("input", e=>{
   const t=e.target;
-  if(t.dataset.sbruto!=null){ renda[+t.dataset.sbruto].bruto=parseMoney(t.value); renderOrcamentoInputs(); updateBudget(); renderCrono(); }
-  else if(t.dataset.sdep!=null){ renda[+t.dataset.sdep].dependentes=Math.max(0, parseInt(t.value.replace(/\D/g,""),10)||0); renderOrcamentoInputs(); updateBudget(); renderCrono(); }
-  else if(t.dataset.soutro!=null){ renda[+t.dataset.soutro].outros=parseMoney(t.value); renderOrcamentoInputs(); updateBudget(); renderCrono(); }
-  else if(t.dataset.beneficio!=null){ renda[+t.dataset.beneficio].valor=parseMoney(t.value); updateBudget(); renderCrono(); }
-  else if(t.dataset.custo!=null){ custos[+t.dataset.custo].valor=parseMoney(t.value); updateBudget(); renderCrono(); }
+  if(t.dataset.renda!=null){ const i=+t.dataset.renda; renda[i].valor=parseMoney(t.value); refreshLiq(i); updateBudget(); }
+  else if(t.dataset.dep!=null){ const i=+t.dataset.dep; renda[i].dependentes=Math.max(0, parseInt(t.value)||0); refreshLiq(i); updateBudget(); }
+  else if(t.dataset.custo!=null){ custos[+t.dataset.custo].valor=parseMoney(t.value); updateBudget(); }
   else if(t.dataset.cnome!=null){ custos[+t.dataset.cnome].nome=t.value; }
+  else if(t.dataset.ppr!=null){ recebimentos[+t.dataset.ppr].bruto=parseMoney(t.value); refreshPPR(+t.dataset.ppr); updateBudget(); }
 });
 orcSection.addEventListener("blur", e=>{
   const t=e.target;
-  if(t.dataset.sbruto!=null) t.value=BRLc(renda[+t.dataset.sbruto].bruto);
-  else if(t.dataset.soutro!=null) t.value=BRLc(renda[+t.dataset.soutro].outros||0);
-  else if(t.dataset.beneficio!=null) t.value=BRLc(renda[+t.dataset.beneficio].valor);
+  if(t.dataset.renda!=null) t.value=BRLc(renda[+t.dataset.renda].valor);
   else if(t.dataset.custo!=null) t.value=BRLc(custos[+t.dataset.custo].valor);
+  else if(t.dataset.ppr!=null) t.value=BRLc(recebimentos[+t.dataset.ppr].bruto);
+  if(t.dataset.renda!=null||t.dataset.custo!=null||t.dataset.dep!=null||t.dataset.ppr!=null){ renderRecebimentos(); renderCrono(); }
 }, true);
 orcSection.addEventListener("click", e=>{
   if(e.target.closest("#addCusto")){ custos.push({grupo:"Outros",nome:"Novo custo",valor:0}); renderOrcamentoInputs(); updateBudget(); renderCrono(); return; }
