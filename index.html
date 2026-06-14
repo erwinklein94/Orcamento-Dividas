@@ -158,6 +158,27 @@
   .obs{margin-top:11px;font-size:12px;color:var(--ink-soft);background:var(--paper-2);border:1px solid var(--line);border-radius:9px;padding:9px 11px;display:flex;gap:7px}
   .obs svg{flex:0 0 auto;margin-top:1px;color:var(--copper)}
 
+  /* Detalhes: simulação de quitação (desativar dívida) */
+  .detsum{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px 20px;margin-bottom:18px}
+  .detsum .lead{font-size:12.5px;color:var(--ink-soft);font-weight:600;margin-bottom:12px}
+  .detsum .row{display:flex;align-items:center;gap:8px 24px;flex-wrap:wrap}
+  .detsum .sblock .big{font-family:'Spline Sans Mono';font-weight:600;font-size:30px;letter-spacing:-.02em;line-height:1}
+  .detsum .sblock .big.pos{color:var(--pos)} .detsum .sblock .big.neg{color:var(--red)}
+  .detsum .sblock .slbl{font-size:11px;color:var(--ink-soft);font-weight:600;text-transform:uppercase;letter-spacing:.03em;margin-top:4px}
+  .detsum .meta{font-size:12.5px;color:var(--ink-soft);font-weight:600}
+  .detsum .meta b{font-family:'Spline Sans Mono';color:var(--ink);font-weight:600}
+  .detsum .save{margin-left:auto;font-size:12.5px;font-weight:700;color:var(--green);background:var(--pos-soft);border:1px solid #cfe6da;border-radius:999px;padding:6px 13px}
+  .dcard.off{opacity:.6}
+  .dcard.off .stripe{filter:saturate(.15)}
+  .dcard.off .parc .v{text-decoration:line-through;color:var(--ink-soft)}
+  .offbadge{display:none}
+  .dcard.off .offbadge{display:inline-block;font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--pos);background:var(--pos-soft);border:1px solid #cfe6da;border-radius:5px;padding:2px 6px;margin-left:8px;vertical-align:middle}
+  .toggledebt{margin-top:13px;width:100%;appearance:none;border:1.5px solid var(--line-strong);background:#fff;color:var(--ink-soft);font-family:'Hanken Grotesk';font-weight:700;font-size:12.5px;padding:9px 12px;border-radius:10px;cursor:pointer;transition:.12s;display:flex;align-items:center;justify-content:center;gap:7px}
+  .toggledebt svg{width:15px;height:15px;flex:0 0 auto}
+  .toggledebt:hover{border-color:var(--red);color:var(--red);background:var(--red-soft)}
+  .dcard.off .toggledebt{opacity:1;border-color:#cfe6da;color:var(--green);background:var(--pos-soft)}
+  .dcard.off .toggledebt:hover{border-color:var(--green-2);background:#d4ece0}
+
   /* Simulador */
   .panel{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px;margin-top:8px}
   .panel h3{font-family:'Fraunces';font-weight:600;font-size:18px;margin-bottom:4px}
@@ -494,12 +515,13 @@ let includeCard = true;
 let strat = "juros";
 
 function filtered(){ return dividas.filter(d => owner==="todos" || d.titular===owner); }
+const isAtiva = d => d.ativa !== false; // dívida desativada = simulada como quitada
 const START = mkey(REF.ano, REF.mes+1); // julho/2026
 
 /* ============ ABA 1: CRONOGRAMA ============ */
 function iniK(d){ return (d.iniAno!=null) ? mkey(d.iniAno, d.iniMes) : START; }
 function buildProjection(){
-  const list = filtered();
+  const list = filtered().filter(isAtiva);
   const loans = list.filter(d=>!d.tipoCartao);
   const cards = list.filter(d=>d.tipoCartao);
   let maxK = START;
@@ -588,13 +610,30 @@ function renderCrono(){
 /* ============ ABA 2: DETALHES ============ */
 function renderDet(){
   const list = filtered();
-  if(!list.length){ document.getElementById("detList").innerHTML='<div class="empty">Nenhuma dívida para este titular.</div>'; return; }
+
+  // Resumo da simulação: impacto no orçamento do próximo mês (família, igual à aba Orçamento)
+  const r=rendaTotal(), c=custosTotal();
+  const parcAtivas=familyDebtAt(START), economia=familyDebtAtAll(START)-parcAtivas;
+  const sobra=r-c-parcAtivas;
+  const offCount=dividas.filter(d=>!isAtiva(d)).length;
+  const summary = `<div class="detsum">
+      <div class="lead">Simulação de quitação — desative qualquer dívida no card para ver quanto sobraria no orçamento mensal</div>
+      <div class="row">
+        <div class="sblock"><div class="big num ${sobra>=0?'pos':'neg'}">${BRL(sobra)}</div><div class="slbl">sobra no próximo mês (julho)</div></div>
+        <div class="meta">renda líquida <b>${BRL(r)}</b> &nbsp;−&nbsp; custos <b>${BRL(c)}</b> &nbsp;−&nbsp; parcelas ativas <b>${BRL(parcAtivas)}</b></div>
+        ${offCount>0?`<div class="save">${offCount} ${offCount===1?'dívida':'dívidas'} simulada${offCount===1?'':'s'} como quitada${offCount===1?'':'s'}${economia>0?` · +${BRL(economia)}/mês`:''}</div>`:''}
+      </div>
+    </div>`;
+
+  if(!list.length){ document.getElementById("detList").innerHTML=summary+'<div class="empty">Nenhuma dívida para este titular.</div>'; return; }
   const owners = [...new Set(list.map(d=>d.titular))];
-  let html="";
+  let html=summary;
   owners.forEach(o=>{
     const arr = list.filter(d=>d.titular===o);
     html += `<div class="who-h">${o} <span class="cnt">${arr.length} ${arr.length===1?'dívida':'dívidas'}</span></div><div class="grid">`;
     arr.forEach(d=>{
+      const idx = dividas.indexOf(d);
+      const off = !isAtiva(d);
       const col = credColor(d.credor);
       const liq = liqOf(d);
       const est = liqEstimada(d);
@@ -617,11 +656,11 @@ function renderDet(){
           <div class="cell"><div class="k">1ª parcela</div><div class="v">${d.primeira}</div></div>
           <div class="cell"><div class="k">Última parcela</div><div class="v">${d.ultima}</div></div>`;
       }
-      html += `<div class="dcard">
+      html += `<div class="dcard${off?' off':''}">
         <div class="stripe" style="background:${col}"></div>
         <div class="ch">
           <div>
-            <h4>${d.credor}</h4>
+            <h4>${d.credor}<span class="offbadge">simulada como quitada</span></h4>
             <div class="csub">contrato ${d.contrato}</div>
             <div class="badge" style="background:${col}1f;color:${d.credor==='Banco do Brasil'?'#8a6d00':col}">${d.tipo}</div>
           </div>
@@ -629,6 +668,9 @@ function renderDet(){
         </div>
         <div class="kv">${kv}</div>
         ${d.obs?`<div class="obs"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg><span>${d.obs}</span></div>`:''}
+        <button class="toggledebt" data-toggle="${idx}">${off
+          ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 2.6-6.4M3 4.5V9h4.5"/></svg>Reativar dívida'
+          : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3.5v8M6.6 6.6a8 8 0 1 0 10.8 0"/></svg>Desativar (simular quitação)'}</button>
       </div>`;
     });
     html += `</div>`;
@@ -640,7 +682,7 @@ function renderDet(){
 function parseMoney(s){ return parseFloat(String(s).replace(/\./g,"").replace(",",".").replace(/[^\d.]/g,""))||0; }
 
 function simular(valor){
-  let arr = filtered().filter(d=>!d.tipoCartao).map(d=>({d, liq:liqOf(d), nom:nominalRest(d)}));
+  let arr = filtered().filter(d=>!d.tipoCartao && isAtiva(d)).map(d=>({d, liq:liqOf(d), nom:nominalRest(d)}));
   if(strat==="juros") arr.sort((a,b)=> b.d.cetMes - a.d.cetMes);
   else if(strat==="fluxo") arr.sort((a,b)=> b.d.parcela - a.d.parcela);
   else arr.sort((a,b)=> a.liq - b.liq);
@@ -726,7 +768,7 @@ simInput.addEventListener("input", ()=>{
 document.getElementById("simChips").addEventListener("click", e=>{
   const b = e.target.closest("button"); if(!b) return;
   if(b.dataset.all){
-    const tot = filtered().filter(d=>!d.tipoCartao).reduce((a,d)=>a+liqOf(d),0);
+    const tot = filtered().filter(d=>!d.tipoCartao && isAtiva(d)).reduce((a,d)=>a+liqOf(d),0);
     simInput.value = tot.toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2});
   } else if(b.dataset.set){
     simInput.value = "0,00";
@@ -754,6 +796,13 @@ document.getElementById("ownerseg").addEventListener("click", e=>{
   const b = e.target.closest("button"); if(!b) return;
   [...document.querySelectorAll("#ownerseg button")].forEach(x=>x.classList.remove("on"));
   b.classList.add("on"); owner = b.dataset.owner;
+  renderAll();
+});
+// Detalhes: ativar/desativar dívida (simula quitação) e recalcular tudo
+document.getElementById("det").addEventListener("click", e=>{
+  const b = e.target.closest("[data-toggle]"); if(!b) return;
+  const i = +b.dataset.toggle;
+  dividas[i].ativa = !isAtiva(dividas[i]);
   renderAll();
 });
 
@@ -831,9 +880,18 @@ const esc = s => String(s||"").replace(/"/g,"&quot;");
 function familyDebtAt(k){
   let fix=0, card=0;
   for(const d of dividas){
+    if(!isAtiva(d)) continue; // desativada = simulada como quitada, sai do orçamento
     if(k>=iniK(d) && k<=mkey(d.fimAno,d.fimMes)){ if(d.tipoCartao) card+=d.parcela; else fix+=d.parcela; }
   }
   return fix + (includeCard?card:0);
+}
+// mesmo cálculo, mas SEM aplicar desativações — base para medir a economia da simulação
+function familyDebtAtAll(k){
+  let s=0;
+  for(const d of dividas){
+    if(k>=iniK(d) && k<=mkey(d.fimAno,d.fimMes)) s+=d.parcela;
+  }
+  return s;
 }
 
 function renderOrcamentoInputs(){
