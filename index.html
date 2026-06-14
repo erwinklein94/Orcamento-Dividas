@@ -254,8 +254,8 @@
         <div class="sub">Família Klein · empréstimos e financiamentos</div>
       </div>
       <div class="ref">
-        Referência<b>Maio / 2026</b>
-        <span style="opacity:.8">1ª parcela em aberto: <b style="display:inline;font-weight:700">jun/2026</b></span>
+        Referência<b>Junho / 2026</b>
+        <span style="opacity:.8">1ª parcela em aberto: <b style="display:inline;font-weight:700">jul/2026</b></span>
       </div>
     </div>
 
@@ -285,10 +285,6 @@
         <button data-owner="Erwin">Erwin</button>
         <button data-owner="Raquel">Raquel</button>
       </div>
-      <label class="toggle on" id="cardtoggle">
-        <span>Incluir fatura do cartão</span>
-        <span class="switch"></span>
-      </label>
     </div>
   </header>
 
@@ -297,10 +293,9 @@
     <div class="hero">
       <div class="k">Próximo mês a pagar</div>
       <div class="big num" id="heroBig">R$ 0,00</div>
-      <div class="when" id="heroWhen">Junho / 2026</div>
+      <div class="when" id="heroWhen">Julho / 2026</div>
       <div class="split">
         <div class="it"><div class="v num" id="heroFix">R$ 0,00</div><div class="t">Parcelas fixas</div></div>
-        <div class="it"><div class="v num" id="heroCard">R$ 0,00</div><div class="t">Fatura do cartão</div></div>
         <div class="it"><div class="v num" id="heroCount">0</div><div class="t">Dívidas ativas</div></div>
       </div>
     </div>
@@ -311,13 +306,13 @@
   <!-- ===================== ABA: ORÇAMENTO ===================== -->
   <section id="orc">
     <div class="hero">
-      <div class="k">Sobra estimada — próximo mês (junho/2026)</div>
+      <div class="k">Sobra estimada — próximo mês (julho/2026)</div>
       <div class="big num" id="orcBig">R$ 0,00</div>
       <div class="when">renda da família − custos de vida − parcelas das dívidas</div>
       <div class="split">
         <div class="it"><div class="v num" id="orcRenda">R$ 0,00</div><div class="t">Renda da família</div></div>
         <div class="it"><div class="v num" id="orcCustos">R$ 0,00</div><div class="t">Custos de vida</div></div>
-        <div class="it"><div class="v num" id="orcDiv">R$ 0,00</div><div class="t">Parcelas (junho)</div></div>
+        <div class="it"><div class="v num" id="orcDiv">R$ 0,00</div><div class="t">Parcelas (julho)</div></div>
       </div>
     </div>
 
@@ -412,7 +407,7 @@
    Campos: parcela = valor fixo mensal; liq = saldo real de
    quitação (deixe null em empréstimos BB que o sistema estima).
    ============================================================ */
-const REF = {ano:2026, mes:5}; // referência: maio/2026 (1º mês em aberto = junho/2026)
+const REF = {ano:2026, mes:6}; // referência: junho/2026 (1º mês em aberto = julho/2026)
 
 const dividas = [
   /* ---------- ERWIN KLEIN ---------- */
@@ -459,11 +454,6 @@ const dividas = [
    fimAno:2030, fimMes:2, liq:19800.53,
    obs:"Pré-fixado. As parcelas 57 a 60 já foram quitadas antecipadamente (amortização com redução de prazo), então o contrato encerra na parcela 56 (fev/2030), não em jun/2030."},
 
-  {titular:"Erwin", credor:"Banco do Brasil", tipo:"Cartão de crédito", contrato:"SMILES GOLD VISA",
-   parcela:995.72, tipoCartao:true, limiteUsado:5574.00, limiteDisp:18237.00, vencCartao:"10/06/2026",
-   compras:"28/abr a 29/mai", fimAno:2026, fimMes:6, liq:null,
-   obs:"Fatura fechada de R$ 995,72 (compras de 28/abr a 29/mai). É uma despesa variável: muda todo mês conforme o uso. Limite usado total: R$ 5.574,00."},
-
   /* ---------- RAQUEL KLEIN ---------- */
   {titular:"Raquel", credor:"Banco do Brasil", tipo:"Consignado", contrato:"529.150",
    parcela:977.39, nParc:72, nRest:37, taxaMes:3.22, taxaAno:46.27, cetMes:3.35, cetAno:48.52,
@@ -478,11 +468,6 @@ const dividas = [
    primeira:"30/06/2026", ultima:"30/11/2027", contratoData:"08/12/2025",
    iniAno:2026, iniMes:6, fimAno:2027, fimMes:11, liq:null,
    obs:"24 parcelas de R$ 707,54; 5 pagas. Encerra em nov/2027. A instituição não aparece nas telas enviadas (app de tema verde) — confirme o nome do credor para o registro ficar completo."},
-
-  {titular:"Raquel", credor:"Banco do Brasil", tipo:"Cartão de crédito", contrato:"OUROCARD VISA",
-   parcela:33.13, tipoCartao:true, limiteUsado:371.00, limiteDisp:3517.00, vencCartao:"05/06/2026",
-   compras:"24/abr a 26/mai", iniAno:2026, iniMes:6, fimAno:2026, fimMes:6, liq:null,
-   obs:"Fatura fechada de R$ 33,13 (compras de 24/abr a 26/mai). Despesa variável conforme o uso. Limite usado total: R$ 371,00."},
 ];
 
 /* ===== utilidades ===== */
@@ -509,7 +494,7 @@ let includeCard = true;
 let strat = "juros";
 
 function filtered(){ return dividas.filter(d => owner==="todos" || d.titular===owner); }
-const START = mkey(REF.ano, REF.mes+1); // junho/2026
+const START = mkey(REF.ano, REF.mes+1); // julho/2026
 
 /* ============ ABA 1: CRONOGRAMA ============ */
 function iniK(d){ return (d.iniAno!=null) ? mkey(d.iniAno, d.iniMes) : START; }
@@ -541,7 +526,6 @@ function renderCrono(){
   document.getElementById("heroBig").textContent = BRL(heroTotal);
   document.getElementById("heroWhen").textContent = MESES[first.m-1].replace(/^./,c=>c.toUpperCase()) + " / " + first.y;
   document.getElementById("heroFix").textContent = BRL(first.fix);
-  document.getElementById("heroCard").textContent = first.card>0 ? BRL(first.card) : "—";
   document.getElementById("heroCount").textContent = first.items.filter(d=> includeCard || !d.tipoCartao).length;
 
   // agrupado por ano
@@ -694,7 +678,7 @@ function renderSim(){
       <div><div class="v sm" style="color:#ecc69a">${BRL(jurosEvit)}</div><div class="t">Juros economizados</div></div>
     </div>
     ${sobra>0.5 ? `<div class="leftover">Sobram <b class="num">${BRL(sobra)}</b> — dá para quitar tudo e ainda sobra.</div>`
-      : `<div class="leftover">Saldo real de todas as dívidas (excl. cartão): <b class="num">${BRL(totalLiq)}</b></div>`}
+      : `<div class="leftover">Saldo real de todas as dívidas: <b class="num">${BRL(totalLiq)}</b></div>`}
   `;
 
   let rows = out.map(o=>{
@@ -771,11 +755,6 @@ document.getElementById("ownerseg").addEventListener("click", e=>{
   [...document.querySelectorAll("#ownerseg button")].forEach(x=>x.classList.remove("on"));
   b.classList.add("on"); owner = b.dataset.owner;
   renderAll();
-});
-document.getElementById("cardtoggle").addEventListener("click", ()=>{
-  includeCard = !includeCard;
-  document.getElementById("cardtoggle").classList.toggle("on", includeCard);
-  renderCrono(); updateBudget();
 });
 
 /* ============ ORÇAMENTO: renda + custos editáveis ============ */
@@ -941,7 +920,7 @@ function updateBudget(){
   const t13=extrasAt(12).total, tppr=extrasAt(4).total;
   const noteVale = vale>0 ? `O vale alimentação soma R$ ${BRLc(vale)}/mês (isento) e só serve para alimentação — como o gasto de Mercado é maior, ele é totalmente aproveitado. ` : "";
   document.getElementById("orcNote").innerHTML =
-    `<b>Sobra = renda líquida da família − custos de vida − parcelas das dívidas</b>, para o próximo mês (jun/2026). ` +
+    `<b>Sobra = renda líquida da família − custos de vida − parcelas das dívidas</b>, para o próximo mês (jul/2026). ` +
     `Os salários já estão <b>líquidos</b>: foram descontados R$ ${BRLc(descontos)}/mês de INSS + Imposto de Renda (tabelas 2026, com a isenção de IR até R$ 5.000). ` +
     noteVale +
     `Em <b>dezembro</b> entra o 13º (líquido ~${BRL(t13)}) e em <b>abril</b> o PPR da Raquel (líquido ~${BRL(tppr)}) — aparecem com selo verde no Cronograma. ` +
