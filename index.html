@@ -332,7 +332,7 @@
     </div>
     <div class="panel" style="margin-top:14px">
       <h3>Recebimentos anuais</h3>
-      <p class="lead">Entradas extras que caem em meses específicos. O 13º é calculado a partir dos salários; o PPR da Raquel é editável (≈ 4 a 5× o salário bruto).</p>
+      <p class="lead">Entradas extras que caem em meses específicos. O 13º é calculado a partir dos salários; os PPRs da Raquel e do Erwin são editáveis (Raquel ≈ 4 a 5× e Erwin até 4× o salário bruto).</p>
       <div id="recebList"></div>
     </div>
     <div class="note" id="orcNote"></div>
@@ -759,8 +759,8 @@ document.getElementById("ownerseg").addEventListener("click", e=>{
 
 /* ============ ORÇAMENTO: renda + custos editáveis ============ */
 let renda = [
-  {pessoa:"Raquel", tipo:"Salário", valor:10911, tributavel:true, dependentes:0},
-  {pessoa:"Erwin",  tipo:"Salário", valor:4130,  tributavel:true, dependentes:0},
+  {pessoa:"Raquel", tipo:"Salário", valor:10500, tributavel:true, dependentes:0},
+  {pessoa:"Erwin",  tipo:"Salário", valor:4336.14, tributavel:true, dependentes:0},
   {pessoa:"Raquel", tipo:"Vale alimentação", valor:1116, tributavel:false},
   {pessoa:"Erwin",  tipo:"Vale alimentação", valor:735,  tributavel:false},
 ];
@@ -769,6 +769,7 @@ let custos = [
   {grupo:"Contas da casa", nome:"Gás", valor:35},
   {grupo:"Contas da casa", nome:"Luz", valor:380},
   {grupo:"Contas da casa", nome:"Faxina", valor:440},
+  {grupo:"Contas da casa", nome:"Vivo", valor:295},
   {grupo:"Mercado", nome:"Mercado", valor:2100},
   {grupo:"Educação", nome:"Educação", valor:1935},
   {grupo:"Transporte", nome:"Combustível", valor:500},
@@ -811,7 +812,8 @@ function plrIR2026(v){
 /* Recebimentos anuais: 13º (dez, ambos) e PPR (abr, só Raquel) */
 let recebimentos = [
   {nome:"13º salário", mes:12, tipo:"13"},
-  {nome:"PPR", mes:4, tipo:"ppr", pessoa:"Raquel", bruto:49099.50}, // ~4,5× o salário bruto da Raquel
+  {nome:"PPR", mes:4, tipo:"ppr", pessoa:"Raquel", bruto:49099.50, hint:"≈ 4 a 5× o salário"}, // editável
+  {nome:"PPR", mes:4, tipo:"ppr", pessoa:"Erwin",  bruto:17344.56, hint:"≈ até 4× o salário"}, // 4× o salário bruto do Erwin
 ];
 const liquido13Total = ()=> renda.filter(r=>r.tributavel).reduce((a,r)=>a+liquidoOf(r),0); // 13º não tem vale
 function extrasAt(mesDoAno){
@@ -821,7 +823,7 @@ function extrasAt(mesDoAno){
     if(e.tipo==="13"){ total+=liquido13Total(); labels.push("13º"); }
     else if(e.tipo==="ppr"){ total+=(+e.bruto||0)-plrIR2026(e.bruto); labels.push("PPR"); }
   }
-  return {total, labels};
+  return {total, labels:[...new Set(labels)]};
 }
 const esc = s => String(s||"").replace(/"/g,"&quot;");
 
@@ -891,7 +893,7 @@ function renderRecebimentos(){
       const ir=plrIR2026(e.bruto), liq=(+e.bruto||0)-ir;
       h += `<div class="grphdr">PPR · abril · só ${esc(e.pessoa)}</div>
         <div class="crow">
-          <div style="flex:1;min-width:0;padding-left:2px"><div style="font-weight:600;font-size:13.5px">PPR bruto <span style="font-size:10.5px;color:var(--ink-soft);font-weight:600">≈ 4 a 5× o salário</span></div></div>
+          <div style="flex:1;min-width:0;padding-left:2px"><div style="font-weight:600;font-size:13.5px">PPR bruto <span style="font-size:10.5px;color:var(--ink-soft);font-weight:600">${esc(e.hint||"≈ 4 a 5× o salário")}</span></div></div>
           <div class="min"><span class="pre">R$</span><input data-ppr="${i}" inputmode="decimal" value="${BRLc(e.bruto)}"></div>
         </div>
         <div class="liqline" data-pprliq="${i}">líquido <b>${BRL(liq)}</b> &nbsp;·&nbsp; −IR PLR ${ir>0?BRL(ir):'isento'} &nbsp;·&nbsp; sem INSS</div>`;
@@ -923,7 +925,7 @@ function updateBudget(){
     `<b>Sobra = renda líquida da família − custos de vida − parcelas das dívidas</b>, para o próximo mês (jul/2026). ` +
     `Os salários já estão <b>líquidos</b>: foram descontados R$ ${BRLc(descontos)}/mês de INSS + Imposto de Renda (tabelas 2026, com a isenção de IR até R$ 5.000). ` +
     noteVale +
-    `Em <b>dezembro</b> entra o 13º (líquido ~${BRL(t13)}) e em <b>abril</b> o PPR da Raquel (líquido ~${BRL(tppr)}) — aparecem com selo verde no Cronograma. ` +
+    `Em <b>dezembro</b> entra o 13º (líquido ~${BRL(t13)}) e em <b>abril</b> o PPR da Raquel e do Erwin (líquido ~${BRL(tppr)} somados) — aparecem com selo verde no Cronograma. ` +
     `O consignado e as demais parcelas são abatidos aqui no orçamento (não no salário), sem contagem dupla. Ajuste os dependentes em cada salário para o IR ficar exato.`;
 }
 
