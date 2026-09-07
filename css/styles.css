@@ -1,3 +1,19 @@
+[hidden]{display:none!important}
+#logoutButton{order:5;margin-top:20px;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);cursor:pointer;font:inherit}
+.login-card #signupButton{background:var(--surface-d);color:var(--ink);font-size:13px}
+.scenario-panel{grid-column:2;min-width:0;margin:0 0 18px}
+.scenario-panel p{margin:8px 0;line-height:1.5;font-size:13px}
+.scenario-controls{display:flex;flex-wrap:wrap;gap:10px;align-items:end;margin-top:12px}
+.scenario-controls label{display:flex;flex:1 1 220px;flex-direction:column;gap:6px;font-size:12px;font-weight:700;min-width:0}
+.scenario-controls input,.scenario-controls select{width:100%;min-width:0;box-sizing:border-box;border:1px solid var(--line);border-radius:10px;background:var(--surface-d);color:var(--ink);padding:10px;font:inherit;font-size:14px}
+.scenario-panel button{border:1px solid var(--line);border-radius:10px;padding:11px 14px;background:var(--surface);color:var(--ink);font:inherit;font-size:13px;font-weight:700;cursor:pointer}
+.scenario-panel #scenarioActivate{background:var(--green);color:white}
+.scenario-panel button:disabled{opacity:.5;cursor:default}
+.scenario-panel .scenario-help{color:var(--soft);font-size:12px}
+.scenario-panel #scenarioStatus{color:var(--pos);font-size:12px}
+.scenario-panel #scenarioStatus.scenario-error{color:var(--red)}
+.scenario-controls input:focus-visible,.scenario-controls select:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+@media(max-width:600px){.scenario-controls label{flex-basis:100%}.scenario-controls button{flex:1 1 auto}}
 :root{
 /* ---- surfaces ---- */
 --paper:#E7E0D0;        /* fundo da página */
