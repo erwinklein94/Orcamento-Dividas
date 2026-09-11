@@ -8,6 +8,7 @@
 .scenario-controls input,.scenario-controls select{width:100%;min-width:0;box-sizing:border-box;border:1px solid var(--line);border-radius:10px;background:var(--surface-d);color:var(--ink);padding:10px;font:inherit;font-size:14px}
 .scenario-panel button{border:1px solid var(--line);border-radius:10px;padding:11px 14px;background:var(--surface);color:var(--ink);font:inherit;font-size:13px;font-weight:700;cursor:pointer}
 .scenario-panel #scenarioActivate{background:var(--green);color:white}
+.scenario-panel #scenarioDelete{border-color:var(--red);color:var(--red)}
 .scenario-panel button:disabled{opacity:.5;cursor:default}
 .scenario-panel .scenario-help{color:var(--soft);font-size:12px}
 .scenario-panel #scenarioStatus{color:var(--pos);font-size:12px}

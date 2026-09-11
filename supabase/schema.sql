@@ -13,7 +13,8 @@ create table public.finance_workspaces (
     and jsonb_typeof(payload->'reference') = 'object'
     and jsonb_typeof(payload->'defaults') = 'object'
     and jsonb_typeof(payload->'scenarios') = 'array'
-    and jsonb_array_length(payload->'scenarios') >= 3
+    -- O painel permite excluir cenários; ao menos um sempre permanece.
+    and jsonb_array_length(payload->'scenarios') >= 1
     and jsonb_typeof(payload->'activeId') = 'string'
     and octet_length(payload::text) <= 2000000, false))
 );

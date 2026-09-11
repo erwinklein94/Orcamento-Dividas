@@ -25,7 +25,7 @@ const FinanceStore = (() => {
     return !!(s && s.version === 2 && s.reference && Number.isInteger(s.reference.ano) &&
       s.reference.ano >= 2020 && s.reference.ano <= 2100 && Number.isInteger(s.reference.mes) &&
       s.reference.mes >= 0 && s.reference.mes <= 11 && validBudget(s.defaults) &&
-      Array.isArray(s.scenarios) && s.scenarios.length >= 3 && s.scenarios.every(c =>
+      Array.isArray(s.scenarios) && s.scenarios.length >= 1 && s.scenarios.every(c =>
         c && text(c.id) && text(c.name) && c.name.trim() && c.name.length <= 60 && validBudget(c.budget)) &&
       new Set(s.scenarios.map(c => c.id)).size === s.scenarios.length && s.scenarios.some(c => c.id === s.activeId));
   }
@@ -42,6 +42,14 @@ const FinanceStore = (() => {
     s.scenarios.push(c);
     s.activeId = c.id;
     return c;
+  }
+  // Deleting is irreversible, so the last remaining scenario is always kept.
+  function remove(s, id) {
+    const index = s.scenarios.findIndex(c => c.id === id);
+    if (index < 0 || s.scenarios.length <= 1) return false;
+    const [removed] = s.scenarios.splice(index,1);
+    if (s.activeId === removed.id) s.activeId = s.scenarios[Math.min(index,s.scenarios.length-1)].id;
+    return true;
   }
   function recover(remote, local, uuid) {
     const result = clone(remote);
@@ -93,6 +101,6 @@ const FinanceStore = (() => {
     }
     return {reset,change,flush,get revision(){return revision;},get dirty(){return sequence!==savedSequence;},get blocked(){return blocked;}};
   }
-  return {clone,validBudget,validPayload,uniqueName,add,recover,importLegacy,writer};
+  return {clone,validBudget,validPayload,uniqueName,add,remove,recover,importLegacy,writer};
 })();
 if (typeof module !== 'undefined') module.exports = FinanceStore;

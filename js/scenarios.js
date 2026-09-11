@@ -28,6 +28,7 @@ const FinanceUI = (() => {
     el('scenarioActive').textContent=active().name;
     el('scenarioName').value=active().name;
     el('scenarioActivate').disabled=true;
+    el('scenarioDelete').disabled=store.scenarios.length<=1;
     try { el('scenarioImport').hidden=localStorage.getItem('klein-budget-scenarios-v1')===null; }
     catch { el('scenarioImport').hidden=true; }
   }
@@ -118,6 +119,14 @@ const FinanceUI = (() => {
   el('scenarioNew').addEventListener('click',()=> {
     if(!store)return;active().budget=snapshot();
     FinanceStore.add(store,store.defaults,'Novo cenário',crypto.randomUUID());applyActive();changed(false);
+  });
+  el('scenarioDelete').addEventListener('click',()=> {
+    if(!store)return;const target=store.scenarios.find(c=>c.id===select.value);if(!target)return;
+    if(store.scenarios.length<=1) {message('Mantenha ao menos um cenário. Crie outro antes de excluir este.');return;}
+    if(!confirm(`Excluir “${target.name}”? Os dados desse cenário serão apagados do Supabase e não poderão ser recuperados.`))return;
+    if(target.id!==store.activeId)active().budget=snapshot();
+    FinanceStore.remove(store,target.id);applyActive();changed(false);
+    if(validPayload(store)&&!writer.blocked)message(`“${target.name}” excluído. Salvando no Supabase…`);
   });
   el('scenarioRename').addEventListener('submit',event=> {
     event.preventDefault();if(!store)return;const name=el('scenarioName').value.trim().slice(0,60);

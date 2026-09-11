@@ -23,6 +23,18 @@ test('independent full scenario copies and validation',()=>{
   assert.equal(p.scenarios[0].budget.renda[0].valor,4000);
   p.activeId='missing';assert.equal(F.validPayload(p),false);
 });
+test('deleting scenarios keeps the payload valid and never removes the last one',()=>{
+  const p=fixture();
+  assert.equal(F.remove(p,'missing'),false);
+  assert.equal(F.remove(p,'two'),true);
+  assert.deepEqual(p.scenarios.map(c=>c.id),['one','three']);
+  assert.equal(p.activeId,'one');assert.ok(F.validPayload(p));
+  assert.equal(F.remove(p,'one'),true);
+  assert.deepEqual(p.scenarios.map(c=>c.id),['three']);
+  assert.equal(p.activeId,'three');assert.ok(F.validPayload(p));
+  assert.equal(F.remove(p,'three'),false);
+  assert.equal(p.scenarios.length,1);assert.ok(F.validPayload(p));
+});
 test('serialized saves include edits made while the previous request is in flight',async()=>{
   let release;const sent=[];
   const w=F.writer({save:async(payload,revision)=>{sent.push([payload,revision]);if(sent.length===1)await new Promise(r=>release=r);return{revision:revision+1};}});
@@ -72,7 +84,9 @@ async function boot(cloud={payload:fixture(),revision:1},storage=new Map()){
   const document={getElementById:id=>nodes[id],createElement:element,
     querySelectorAll:selector=>selector==='#tabs button'?tabNodes:selector==='section'?['crono','orc','det','sim'].map(id=>nodes[id]):[],
     querySelector:selector=>selector==='#tabs button.active'?tabNodes.find(x=>x.classList.contains('active')):selector==='.ref b'?element():null};
+  const prompts={confirm:true};
   const context=vm.createContext({...nodes,document,window:element(),crypto:webcrypto,console,setTimeout,clearTimeout,
+    confirm:()=>prompts.confirm,
     localStorage:{getItem:key=>storage.get(key)??null,setItem:(k,v)=>storage.set(k,v),removeItem:k=>storage.delete(k)}});
   const client={from(){let value,revision;return{select(){return this;},update(v){value=v;return this;},eq(k,v){if(k==='revision')revision=v;return this;},async maybeSingle(){
     if(value){if(revision!==cloud.revision)return{data:null};cloud.payload=F.clone(value.payload);cloud.revision++;return{data:{revision:cloud.revision}};}
@@ -81,9 +95,10 @@ async function boot(cloud={payload:fixture(),revision:1},storage=new Map()){
   context.client=client;
   for(const f of ['app.js','finance-store.js','scenarios.js'])vm.runInContext(fs.readFileSync(path.join(root,'js',f),'utf8'),context);
   await vm.runInContext('FinanceUI.start(client,{id:"owner"})',context);
-  return {nodes,cloud,storage,read:x=>JSON.parse(vm.runInContext(`JSON.stringify(${x})`,context)),
+  return {nodes,cloud,storage,prompts,read:x=>JSON.parse(vm.runInContext(`JSON.stringify(${x})`,context)),
     input(dataset,value,id=''){nodes.orc.emit('input',{dataset,value,id});},
     activate(id){nodes.scenarioSelect.value=id;nodes.scenarioActivate.emit('click');},
+    remove(id){nodes.scenarioSelect.value=id;nodes.scenarioDelete.emit('click');},
     flush:()=>vm.runInContext('FinanceUI.flush()',context),stop:()=>vm.runInContext('FinanceUI.stop()',context)};
 }
 test('real app handlers persist salaries, deductions, costs, bonus and active scenario across devices',async t=>{
@@ -106,4 +121,25 @@ test('real copy/new/debt controls persist complete independent budgets',async t=
   app.activate('one');assert.equal(app.read('custos[0].valor'),250);
   app.nodes.scenarioNew.emit('click');assert.equal(app.read('custos[0].valor'),100);await app.flush();
   assert.equal(app.cloud.payload.scenarios.length,5);assert.ok(app.cloud.payload.scenarios.some(c=>c.name==='My plan'));
+});
+test('real delete control confirms first, persists the removal and protects the last scenario',async t=>{
+  const app=await boot();t.after(app.stop);
+  app.input({custo:'0'},'250,00');
+  app.prompts.confirm=false;app.remove('two');
+  assert.deepEqual(app.nodes.scenarioSelect.children.map(o=>o.value),['one','two','three']);
+  app.prompts.confirm=true;app.remove('two');
+  assert.deepEqual(app.nodes.scenarioSelect.children.map(o=>o.value),['one','three']);
+  assert.equal(app.nodes.scenarioActive.textContent,'one');assert.equal(app.read('custos[0].valor'),250);
+  app.remove('one');
+  assert.equal(app.nodes.scenarioActive.textContent,'three');assert.equal(app.read('custos[0].valor'),100);
+  assert.equal(app.nodes.scenarioDelete.disabled,true);
+  app.remove('three');
+  assert.deepEqual(app.nodes.scenarioSelect.children.map(o=>o.value),['three']);
+  assert.match(app.nodes.scenarioStatus.textContent,/ao menos um cenário/);
+  await app.flush();
+  assert.deepEqual(app.cloud.payload.scenarios.map(c=>c.name),['three']);
+  assert.equal(app.cloud.payload.activeId,'three');
+  const other=await boot(app.cloud);t.after(other.stop);
+  assert.equal(other.nodes.scenarioActive.textContent,'three');
+  assert.equal(other.nodes.scenarioDelete.disabled,true);
 });

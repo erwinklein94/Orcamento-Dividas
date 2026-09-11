@@ -20,6 +20,10 @@ Cenários:
 - Copiar selecionado cria e ativa uma cópia independente do cenário escolhido.
 - Novo cenário usa o modelo inicial salvo no banco. É possível ter mais de três.
 - Renomear altera o nome do cenário ativo.
+- Excluir selecionado apaga o cenário escolhido depois de uma confirmação. A remoção
+  é gravada no Supabase e não pode ser desfeita. O último cenário nunca é excluído:
+  o botão fica desabilitado quando resta apenas um. Ao excluir o cenário ativo, o
+  painel passa a usar outro cenário automaticamente.
 - Aguarde “salvo no Supabase” antes de fechar a página. Use a mesma conta para
   recuperar os dados em outro dispositivo. Ao voltar à janela, o painel consulta
   atualizações da nuvem quando não há edições locais pendentes.
@@ -44,6 +48,8 @@ Estrutura:
 - js/auth.js: login, cadastro confirmado, sessão e saída.
 - js/supabase-config.js: endereço do projeto e chave publicável (nenhuma chave administrativa).
 - supabase/schema.sql: estrutura e políticas aplicadas pela API de migrations.
+  A migration finance_scenarios_allow_delete baixou o mínimo de cenários de três
+  para um, permitindo a exclusão. O restante da constraint continua igual.
 - supabase/retire-fmt.sql: registro da remoção autorizada das tabelas e contas antigas;
   não executar novamente. O endpoint criar-usuario foi desativado com resposta 410.
 

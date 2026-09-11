@@ -38,12 +38,13 @@
     <button id="scenarioActivate" type="button">Ativar cenário</button>
     <button id="scenarioCopy" type="button">Copiar selecionado</button>
     <button id="scenarioNew" type="button">Novo cenário</button>
+    <button id="scenarioDelete" type="button">Excluir selecionado</button>
   </div>
   <form id="scenarioRename" class="scenario-controls">
     <label>Nome do cenário ativo<input id="scenarioName" maxlength="60" required></label>
     <button type="submit">Renomear</button>
   </form>
-  <p class="scenario-help">Cada cenário guarda rendas, custos, 13º, PPR, amortização, contratos e configurações do painel. Entre com a mesma conta em outro dispositivo para continuar. Novo cenário usa os valores iniciais; copiar usa o cenário selecionado.</p>
+  <p class="scenario-help">Cada cenário guarda rendas, custos, 13º, PPR, amortização, contratos e configurações do painel. Entre com a mesma conta em outro dispositivo para continuar. Novo cenário usa os valores iniciais; copiar usa o cenário selecionado. Excluir apaga o cenário selecionado do Supabase sem possibilidade de desfazer, e o último cenário nunca pode ser excluído.</p>
   <p id="scenarioStatus" role="status" aria-live="polite"></p>
   <button id="scenarioRetry" type="button" hidden>Tentar salvar novamente</button>
   <button id="scenarioRecover" type="button" hidden>Recuperar minhas edições como cópias</button>
