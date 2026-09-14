@@ -5,6 +5,8 @@
   const button=document.getElementById('loginSubmit');
   const signup=document.getElementById('signupButton');
   let loading=false, currentUser, authEpoch=0;
+  // Área da vida que pediu login; só páginas conhecidas, nunca URLs externas.
+  const next=['saude.html','habitos.html','lazer.html','pets.html','carreira.html'].find(p=>p===new URLSearchParams(location.search).get('next'));
   loginEmail.value=FINANCE_CONFIG.email;
   function fail(text){errorEl.textContent=text;}
   async function open(user){
@@ -12,6 +14,7 @@
     const request=++authEpoch;
     try {
       if(user.email?.toLowerCase()!==FINANCE_CONFIG.email)throw new Error('Use sua conta pessoal autorizada para este painel.');
+      if(next){location.replace(next);return;}
       if(await FinanceUI.start(client,user) && request===authEpoch){currentUser=user.id;loginScreen.hidden=true;appWrap.hidden=false;fail('');}
     }catch(error){if(request===authEpoch){loginScreen.hidden=false;appWrap.hidden=true;fail(error.message);}}
   }
