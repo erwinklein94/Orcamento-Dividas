@@ -8,7 +8,7 @@ O período de referência e o modelo inicial também estão no banco.
 
 Primeiro acesso:
 1. Abra a versão atualizada do site por HTTPS (ou localhost para desenvolvimento).
-2. Use erwinklein1994@gmail.com e escolha uma senha de pelo menos 10 caracteres.
+2. Use e escolha uma senha de pelo menos 10 caracteres.
 3. Clique em “Primeiro acesso: criar minha conta” e confirme o e-mail recebido.
 4. Volte ao site e entre com sua senha. A confirmação vincula automaticamente
    a conta ao orçamento já salvo; nenhuma outra conta recebe acesso.
