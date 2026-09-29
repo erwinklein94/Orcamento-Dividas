@@ -271,3 +271,31 @@ button:focus-visible{outline:2px solid var(--green);outline-offset:2px}
 .panel{padding:18px}
 }
 }
+
+/* ===== exportar PDF (orçamento + dívidas) ===== */
+.print-head,.print-title{display:none}
+.exportbar{display:flex;align-items:center;justify-content:flex-end;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+.exportbar span{font-size:12px;color:var(--soft)}
+#exportPdf{border:0;border-radius:12px;padding:11px 18px;background:#111827;color:#fff;font:inherit;font-size:13px;font-weight:800;cursor:pointer;box-shadow:var(--raise-sm)}
+#exportPdf:hover{box-shadow:var(--raise-md)}
+@page{size:A4;margin:12mm}
+@media print{
+body.pdf-export{background:#fff;padding:0;min-height:0}
+body.pdf-export .login-screen,body.pdf-export header,body.pdf-export .scenario-panel,body.pdf-export #crono,body.pdf-export #sim,body.pdf-export .exportbar,body.pdf-export .addbtn,body.pdf-export .del,body.pdf-export .toggledebt,body.pdf-export .detsum{display:none!important}
+body.pdf-export .wrap{display:block;max-width:none;min-height:0;padding:0;margin:0;border:0;border-radius:0;background:none;box-shadow:none;backdrop-filter:none}
+body.pdf-export #orc,body.pdf-export #det{display:block;animation:none}
+body.pdf-export #det{break-before:page}
+body.pdf-export .print-head{display:block;margin-bottom:12px;padding-bottom:10px;border-bottom:2px solid #111827}
+body.pdf-export .print-head h1{font-size:22px}
+body.pdf-export .print-head p{margin-top:4px;font-size:12px;color:#475569}
+body.pdf-export .print-title{display:block;font-size:18px;margin:0 0 10px}
+body.pdf-export .hero{margin-top:0;box-shadow:none;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+body.pdf-export .panel,body.pdf-export .dcard,body.pdf-export .detsum{background:#fff;border:1px solid #d6dce8;box-shadow:none;backdrop-filter:none}
+body.pdf-export .panel,body.pdf-export .dcard,body.pdf-export .bonus-summary>div{break-inside:avoid}
+body.pdf-export .budgrid{grid-template-columns:1fr}
+body.pdf-export .grid{grid-template-columns:1fr 1fr}
+body.pdf-export .who-h{break-after:avoid}
+body.pdf-export .min,body.pdf-export .depbox,body.pdf-export .cell,body.pdf-export .bonus-summary>div{background:#f4f7fb;box-shadow:none}
+body.pdf-export .dcard.off{opacity:.55}
+body.pdf-export .stripe,body.pdf-export .badge{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}

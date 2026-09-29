@@ -34,6 +34,11 @@ Cenários:
 - Conflitos entre dispositivos não sobrescrevem dados: recupere as edições como
   cópias. Ao reabrir, um rascunho antigo também é recuperado como cópias se necessário.
 
+Exportar PDF:
+- O botão “Exportar PDF” na aba Orçamento abre a janela de impressão com o
+  Orçamento e as Dívidas (em nova página) do cenário ativo e do titular filtrado.
+  Escolha “Salvar como PDF” como destino. Botões de edição não aparecem no arquivo.
+
 Publicação:
 Publique index.html e as pastas css/ e js/ (incluindo js/vendor/).
 Não publique tests/, supabase/, .git/ ou arquivos privados/de ambiente.

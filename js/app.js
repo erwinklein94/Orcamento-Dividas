@@ -27,3 +27,12 @@ function renderOrcamentoInputs(){
 function refreshLiq(i){const r=renda[i];if(!r||!r.tributavel)return;const el=document.querySelector(`[data-liq="${i}"]`);if(!el)return;el.innerHTML=`líquido <b>${BRL(liquidoOf(r))}</b> · −INSS ${BRL(inss2026(r.valor))} · −IR ${BRL(irrf2026(r.valor,r.dependentes||0))} · −outros ${BRL(r.outrosDescontos||0)}`}
 orc.addEventListener("input",e=>{const t=e.target;if(t.dataset.desconto==null)return;const i=+t.dataset.desconto;renda[i].outrosDescontos=parseMoney(t.value);refreshLiq(i);updateBudget();renderCrono();renderSim()});
 orc.addEventListener("blur",e=>{const t=e.target;if(t.dataset.desconto==null)return;t.value=BRLc(renda[+t.dataset.desconto].outrosDescontos);renderOrcamentoInputs();renderAll()},true);
+function exportarPdf(){
+  if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();
+  const cenario=(document.getElementById("scenarioActive")||{}).textContent||"",titular=owner==="todos"?"Todos":owner,periodo=`${MESES[REF.mes]} / ${REF.ano}`,hoje=new Date().toLocaleDateString("pt-BR");
+  printHead.innerHTML=`<h1>Orçamento e Dívidas</h1><p>Cenário <b>${esc(cenario)}</b> · Titular <b>${esc(titular)}</b> · Período <b>${periodo}</b> · Gerado em ${hoje}</p>`;
+  const tituloOriginal=document.title;document.title=`Orçamento e Dívidas - ${cenario||"cenário"} - ${MESES[REF.mes]} ${REF.ano}`;document.body.classList.add("pdf-export");
+  window.addEventListener("afterprint",()=>{document.body.classList.remove("pdf-export");document.title=tituloOriginal},{once:true});
+  window.print();
+}
+exportPdf.addEventListener("click",exportarPdf);
