@@ -22,7 +22,7 @@ Deno.serve(async req => {
     const clientSecret=Deno.env.get('PLUGGY_CLIENT_SECRET')||(uuid(clientId)?Deno.env.get(clientId):undefined);
     if(body.action==='status')return json({configured:!!clientId&&!!clientSecret});
     if(!clientId||!clientSecret)return json({error:'Configure PLUGGY_CLIENT_ID e PLUGGY_CLIENT_SECRET nos secrets do Supabase.'},503);
-    if(!['attach','inspect','sync','verify'].includes(body.action))return json({error:'Ação inválida.'},400);
+    if(!['attach','inspect','sync','verify','connect-token'].includes(body.action))return json({error:'Ação inválida.'},400);
     const db=createClient(url,Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,{auth:{persistSession:false},global:{fetch:boundedFetch}});
     const checked = (r: {data: any,error: any})=>{if(r.error)throw new Error('Falha ao salvar ou consultar dados no Supabase.');return r.data;};
     const api=async(path:string,apiKey?:string,payload?:unknown)=>{
@@ -38,6 +38,10 @@ Deno.serve(async req => {
     } else if(['attach','inspect'].includes(body.action)&&(!uuid(body.itemId)||(body.action==='attach'&&(!['Erwin','Raquel'].includes(body.person)||!['Itaú','Santander','Banco do Brasil','Nubank'].includes(body.bank)))))return json({error:'Informe banco, titular e itemId válidos.'},400);
     const {apiKey}=await api('/auth',undefined,{clientId,clientSecret});
     if(body.action==='verify')return json({valid:!!apiKey});
+    if(body.action==='connect-token'){
+      const token=await api('/connect_token',apiKey,{options:{clientUserId:user.id,products:['ACCOUNTS','CREDIT_CARDS','TRANSACTIONS']}});
+      return json({accessToken:token.accessToken});
+    }
     const itemId=stored?.item_id||body.itemId;
     const item=await api('/items/'+encodeURIComponent(itemId),apiKey);
     if(item.consentExpiresAt&&new Date(item.consentExpiresAt).getTime()<=Date.now())return json({error:'Consentimento expirado. Autorize novamente no Meu Pluggy e confira o novo itemId.'},409);

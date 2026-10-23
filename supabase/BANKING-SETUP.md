@@ -36,6 +36,12 @@ Preços consultados em 23/10/2026: [Meu Pluggy pessoal](https://docs.pluggy.ai/p
 5. Em Finanças reais → Conectar bancos, informe banco, titular e itemId e clique Vincular. A função associa uma conta manual correspondente quando existe uma única candidata; havendo várias candidatas, cria uma conta distinta para evitar escolher a errada.
 6. Clique **Sincronizar contas conectadas**. A API usa `/v2/transactions` com paginação por cursor e grava somente BRL com status POSTED. O provedor renova os dados a cada 24 horas; o botão lê a versão disponível, sem forçar atualização bancária. Esta versão não agenda leituras em segundo plano. Os consentimentos precisam ser renovados no provedor quando vencerem.
 
+### Autorização diretamente no site
+
+Em Conectar bancos → Autorizar um banco já conectado, escolha banco e titular e use “Autorizar pelo Meu Pluggy”. O widget oficial 2.8.2 é carregado sob demanda, com `selectedConnectorId: 200` e `connectorIds: [200]`. Ele não oferece conectores diretos de bancos nem a atualização manual de um proxy já existente. O backend gera somente um Connect Token temporário; a chave da API nunca vai ao navegador.
+
+O usuário aceita termos e autoriza a leitura no provedor. Ao concluir, a tela vincula e sincroniza os dados automaticamente. O itemId recebido nos eventos fica em um registro pendente no navegador, separado por usuário, para permitir retomar o vínculo se a janela/página for fechada antes do callback de sucesso. “Concluir vínculo pendente” retoma a consulta no servidor e só grava contas depois de validar o item e a disponibilidade dos dados. O formulário manual continua disponível para conexões autorizadas no Dashboard.
+
 Sem credenciais, as telas de importação e relatórios funcionam; a API mostra “aguardando configuração”. Nenhum serviço pago foi contratado. Integração real depende dessas etapas; a publicação da função, sozinha, não conecta os bancos.
 
 ## Importação
