@@ -54,8 +54,18 @@ A sincronização atualiza valores, datas e descrições mantendo categorias e t
 
 Novos lançamentos da API recebem sugestões locais de categoria por descrições reconhecidas, sem contratar o enriquecimento do provedor. Pagamentos explicitamente identificados como fatura são inicialmente classificados como transferência para não contar a fatura e as compras duas vezes; Pix genérico não é excluído automaticamente. Revise essas sugestões no Extrato. `banking-classification.sql` atualiza somente a ingestão; ressincronizar preserva a classificação já salva.
 
+## Painel e classificação
+
+O painel combina distribuição por categoria, tabela com participação e comparação, evolução de seis meses, curva diária acumulada, destinos agrupados e maiores saídas. Mês, titular, conta, categoria, tipo de movimentação e busca filtram os relatórios e o extrato. Clicar em categorias ou destinos abre somente suas despesas; o filtro Tipo também permite consultar entradas, transferências e ignorados. Saldos atuais e últimos lançamentos ficam em seções recolhíveis.
+
+A comparação do mês em andamento usa os mesmos dias do mês anterior; o histórico de seis meses mantém os totais disponíveis de cada mês e identifica o atual com asterisco. Períodos fechados comparam meses completos. Relatórios dependem da cobertura do histórico importado, sem estimar dados ausentes.
+
+Em Extrato → Organizar categorias, a prévia analisa todo o histórico. A regra compartilhada `js/banking-categories.js` reconhece estabelecimentos, despesas identificáveis, transferências exatas entre os titulares, faturas, aplicações/resgates e entradas explícitas de crédito financiado. Pix genérico fica para revisão. Só preenche categorias vazias; categorias anteriores são mantidas mesmo quando sugere alterar o tratamento de uma movimentação para transferência. O usuário seleciona os grupos antes de salvar no Supabase; as atualizações verificam a categoria e o tratamento anteriores para preservar edições concorrentes.
+
+O normalizador da Edge Function usa o mesmo arquivo. Para publicar, inclua os caminhos completos de `supabase/functions/bank-sync/index.ts`, `supabase/functions/bank-sync/transactions.mjs` e `js/banking-categories.js`, com o primeiro como entrypoint, preservando os imports relativos.
+
 ## Validação
 
-`node --test tests/banking-model.test.cjs tests/life-store.test.cjs tests/scenarios.test.cjs`
+`node --test tests/banking-model.test.cjs tests/banking-provider.test.cjs tests/banking-insights.test.cjs tests/life-store.test.cjs tests/scenarios.test.cjs`
 
 `node tests/browser-preview.cjs` disponibiliza `/__bank-qa` com dados fictícios, sem chamadas ao Supabase, para validar telas e ações. O módulo usa números inteiros de centavos na soma dos indicadores. `banking.sql` registra a migração aplicada no Supabase. Alterações posteriores de schema devem ser migrações aditivas.

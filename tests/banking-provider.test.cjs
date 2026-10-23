@@ -14,7 +14,7 @@ test('initial categories are conservative and generic Pix stays a normal flow',a
   assert.deepEqual(classification('Pagamento de fatura',-200),{category:'Dívidas',flow:'transfer'});
   assert.equal(classification('PIX TRANSFERENCIA',-200).flow,'normal');
   assert.equal(classification('DROGARIA EXEMPLO',-20).category,'Saúde');
-  assert.equal(classification('Supermercado exemplo',-80).category,'Alimentação');
+  assert.equal(classification('Supermercado exemplo',-80).category,'Supermercado');
   assert.equal(classification('Crédito salário',2000).category,'Salário');
   assert.equal(classification('Recebimento desconhecido',50).category,'Sem categoria');
 });

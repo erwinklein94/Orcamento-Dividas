@@ -1,21 +1,8 @@
-// Initial suggestions for newly imported records; resync never replaces user edits.
-const folded = value => String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+// Shared rules are also used by the dashboard's classification review.
+import '../../../js/banking-categories.js';
 export function classification(description, amount) {
-  const text = folded(description);
-  if (/pagamento\s+(?:(?:da|de|do)\s+)?fatura|pag(?:to|amento)\s+(?:de\s+|do\s+)?cartao|credit card (?:bill )?payment/.test(text))
-    return {category:'Dívidas',flow:'transfer'};
-  const rules = [
-    ['Salário', /salario|folha de pagamento/],
-    ['Alimentação', /supermercado|mercado\b|padaria|restaurante|ifood|acougue|hortifruti/],
-    ['Transporte', /\buber\b|\b99app\b|posto\b|combustivel|estacionamento|pedagio/],
-    ['Saúde', /farmacia|drogaria|drogasil|droga raia|hospital|laboratorio|clinica/],
-    ['Moradia', /aluguel|condominio|energia eletrica|conta de luz|sabesp|copasa/],
-    ['Educação', /mensalidade escolar|faculdade|universidade|udemy|alura/],
-    ['Pets', /petshop|pet shop|petz|cobasi|veterinari/],
-    ['Serviços', /netflix|spotify|amazon prime|assinatura|tarifa bancaria/],
-    ['Impostos', /\biptu\b|\bipva\b|receita federal|\bdarf\b/]
-  ];
-  return {category:rules.find(([category,rule])=>rule.test(text) && (category!=='Salário'||amount>0))?.[0]||'Sem categoria',flow:'normal'};
+  const {category,flow}=globalThis.BankingCategories.classify(description,amount);
+  return {category,flow};
 }
 
 export function normalizeTransactions(results, accountId, accountKind='checking') {

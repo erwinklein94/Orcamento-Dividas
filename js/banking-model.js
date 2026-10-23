@@ -1,6 +1,7 @@
 /* Pure parsing and reporting functions, shared with regression tests. */
 const BankingModel = (() => {
-  const categories = ['Sem categoria','Alimentação','Moradia','Transporte','Saúde','Educação','Lazer','Pets','Compras','Serviços','Impostos','Salário','Investimentos','Dívidas'];
+  const C=typeof BankingCategories!=='undefined'?BankingCategories:require('./banking-categories.js');
+  const categories = C.names;
   function money(value) {
     let s=String(value??'').trim().replace(/R\$|\s/g,'');
     if (/^\(.*\)$/.test(s)) s='-'+s.slice(1,-1);
@@ -79,6 +80,25 @@ const BankingModel = (() => {
   }
   // A CSV export must not become a spreadsheet formula when opened in Excel.
   function csvCell(value){let s=String(value??'');if(/^[=+@-]/.test(s))s="'"+s;return '"'+s.replace(/"/g,'""')+'"';}
-  return{categories,money,date,csvRows,parseCSV,parseOFX,prepare,summarize,csvCell};
+  function matchesMovement(r,kind){return !kind||(kind==='expense'?r.flow==='normal'&&Number(r.amount)<0:kind==='income'?r.flow==='normal'&&Number(r.amount)>0:r.flow===kind);}
+  function report(rows,accounts,scope){
+    const {month,today}=scope,selectedAccount=new Map(accounts.map(a=>[a.id,a]));
+    const matches=r=>{const a=selectedAccount.get(r.account_id);return a&&(!a.currency||a.currency==='BRL')&&(!scope.person||a.person===scope.person)&&(!scope.accountId||a.id===scope.accountId)&&(!scope.category||r.category===scope.category)&&matchesMovement(r,scope.movement)&&(!scope.search||C.fold(r.description+' '+r.category).includes(C.fold(scope.search)));};
+    const base=rows.filter(matches),[year,mon]=month.split('-').map(Number);
+    const previousMonth=new Date(Date.UTC(year,mon-2,1)).toISOString().slice(0,7);
+    const partial=month===today.slice(0,7),cutoff=partial?Number(today.slice(8,10)):31;
+    const current=base.filter(r=>r.booked_on.startsWith(month)),previous=base.filter(r=>r.booked_on.startsWith(previousMonth)&&Number(r.booked_on.slice(8,10))<=cutoff);
+    const summary=summarize(current),before=summarize(previous),grouped=new Map();
+    for(const r of current.filter(r=>r.flow==='normal'&&Number(r.amount)<0)){const k=r.category;const g=grouped.get(k)||{name:k,cents:0,count:0,previous:before.byCategory[k]||0};g.cents-=Math.round(Number(r.amount)*100);g.count++;grouped.set(k,g);}
+    const categories=[...grouped.values()].sort((a,b)=>b.cents-a.cents).map(g=>({...g,share:summary.expense?g.cents/(summary.expense*100)*100:0}));
+    const destinations=new Map();
+    for(const r of current.filter(r=>r.flow==='normal'&&Number(r.amount)<0)){const name=r.description.replace(/^(?:pagamento efetuado|compra no debito|compra no débito|compra débito|pagamento de pix qr code|transferência enviada pelo pix|transferência enviada|pix enviado)[|\s]+/i,'').trim()||r.description;const key=C.fold(name);const entry=destinations.get(key)||{name,cents:0,count:0};entry.cents-=Math.round(Number(r.amount)*100);entry.count++;destinations.set(key,entry);}
+    const history=Array.from({length:6},(_,i)=>{const key=new Date(Date.UTC(year,mon-6+i,1)).toISOString().slice(0,7);return{month:key,...summarize(base.filter(r=>r.booked_on.startsWith(key)))};});
+    const expenseRows=current.filter(r=>r.flow==='normal'&&Number(r.amount)<0),uncategorized=expenseRows.filter(r=>r.category==='Sem categoria');
+    const days=new Date(Date.UTC(year,mon,0)).getUTCDate(),displayDays=partial?Math.min(cutoff,days):days;
+    let accumulated=0;const daily=Array.from({length:displayDays},(_,i)=>{const key=month+'-'+String(i+1).padStart(2,'0');const cents=summary.days[key]||0;accumulated+=cents;return{day:i+1,cents,accumulated};});
+    return{current,previous,summary,before,categories,history,daily,partial,cutoff,previousMonth,expenseCount:expenseRows.length,uncategorizedCents:uncategorized.reduce((s,r)=>s-Math.round(Number(r.amount)*100),0),destinations:[...destinations.values()].sort((a,b)=>b.cents-a.cents),largest:expenseRows.slice().sort((a,b)=>Number(a.amount)-Number(b.amount)).slice(0,8)};
+  }
+  return{categories,money,date,csvRows,parseCSV,parseOFX,prepare,summarize,csvCell,matchesMovement,report};
 })();
 if(typeof module!=='undefined')module.exports=BankingModel;
