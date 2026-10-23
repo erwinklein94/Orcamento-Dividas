@@ -33,6 +33,23 @@ const BankingCredit = (() => {
     const match=new RegExp('(?:^|\\D)0*'+contract+'(?!\\d)');
     return payments.filter(p=>p.bank===loan.credor&&p.person===loan.titular&&match.test(p.name));
   }
-  return{weekly,budgetLoans,loanPayments,loanDescription,paymentsForContract};
+  // Fixed monthly installments: present value of the remaining annuity.
+  // Never use an old payoff quote as principal at a different reference date.
+  function loanPosition(loan){
+    const valid=v=>typeof v==='number'&&Number.isFinite(v)&&v>=0;
+    const remaining=loan.quitada?0:valid(loan.nRest)&&Number.isSafeInteger(loan.nRest)?loan.nRest:null;
+    const installmentCents=valid(loan.parcela)&&Number.isSafeInteger(cents(loan.parcela))?cents(loan.parcela):null;
+    const product=remaining!==null&&installmentCents!==null?remaining*installmentCents:null;
+    const totalCents=Number.isSafeInteger(product)?product:null;
+    const rate=valid(loan.taxaMes)?loan.taxaMes/100:null;
+    let principalCents=null;
+    if(totalCents===0)principalCents=0;
+    else if(totalCents!==null&&rate!==null){
+      const value=rate===0?totalCents:installmentCents*(-Math.expm1(-remaining*Math.log1p(rate)))/rate;
+      principalCents=Math.min(totalCents,Math.max(0,Math.round(value)));
+    }
+    return{remaining,installmentCents,totalCents,principalCents,interestCents:principalCents===null?null:totalCents-principalCents,ratePercent:rate===null?null:loan.taxaMes,payoffQuoteCents:valid(loan.liq)?cents(loan.liq):null};
+  }
+  return{weekly,budgetLoans,loanPayments,loanDescription,paymentsForContract,loanPosition};
 })();
 if(typeof module!=='undefined')module.exports=BankingCredit;

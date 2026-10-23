@@ -74,6 +74,10 @@ Empréstimos inicia com o credor Santander selecionado, conforme solicitado. O s
 
 `banking-loans.sql` registra a tabela de snapshots com RLS por proprietário e escrita exclusiva no servidor. A ação `loans` de `bank-sync` valida que o item pertence ao usuário antes de consultar o produto LOANS já coletado. Não amplia produtos nem cria consentimentos. Registra `available`, `empty` ou `unavailable`; uma conexão sem o produto não é tratada como ausência de dívida. Erros de coleta preservam o snapshot anterior. O botão respeita os filtros de banco e titular. As fontes API, cadastro e extrato ficam identificadas e não são somadas como contratos distintos.
 
+O bloco “Quanto ainda falta pagar” detalha cada contrato do filtro, incluindo os que estão fora do plano. Mostra parcelas restantes cadastradas, total nominal (`parcela × nRest`), saldo sem juros futuros estimado por valor presente e juros futuros estimados pela diferença. Usa `taxaMes` contratual em percentual, não o CET. A fórmula de prestações mensais fixas é `PV = parcela × (1 - (1 + taxa/100)^(-nRest)) / (taxa/100)`, com tratamento de taxa zero e precisão estável para taxas pequenas; os totais são conciliados em centavos. Referência e hipóteses ficam visíveis; o filtro do mês dos pagamentos não avança o prazo restante por suposição. Cotações históricas `liq` e suas observações ficam separadas e não são usadas como principal em outra data. Dados ausentes são exibidos como indisponíveis; agregados informam a cobertura dos cálculos. Contratos quitados no cadastro têm prazo e total restantes zerados. Nenhum dado do orçamento é alterado por essa visualização.
+
+Metodologia: [financiamento com prestações fixas — Banco Central](https://www3.bcb.gov.br/CALCIDADAO/publico/exibirMetodologiaFinanciamentoPrestacoesFixas.do?method=exibirMetodologiaFinanciamentoPrestacoesFixas).
+
 Referência da integração: [lista de empréstimos](https://docs.pluggy.ai/en/reference/loan/loans-list), [campos dos contratos](https://docs.pluggy.ai/en/reference/loan/loans-retrieve).
 
 ## Validação

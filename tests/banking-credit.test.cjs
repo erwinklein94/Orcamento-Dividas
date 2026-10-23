@@ -37,3 +37,16 @@ test('provider loans preserve missing balances and only accept the requested ite
   const rows=normalizeLoans([loan,{...loan,id:'two',payments:{}},{...loan,currencyCode:'USD'},{...loan,itemId:'other'}],'item');
   assert.equal(rows.length,2);assert.equal(rows[0].outstandingBalance,0);assert.equal(rows[1].outstandingBalance,null);assert.equal(rows[0].dueInstallments,null);assert.equal(rows[0].paidInstallments,3);
 });
+test('remaining loan value reconciles installment total, present value and future interest',()=>{
+  const r=C.loanPosition({nRest:12,parcela:100,taxaMes:2,liq:400,ativa:false});
+  assert.equal(r.remaining,12);assert.equal(r.totalCents,120000);assert.equal(r.principalCents,105753);assert.equal(r.interestCents,14247);
+  assert.equal(r.totalCents,r.principalCents+r.interestCents);assert.equal(r.payoffQuoteCents,40000);
+  assert.equal(C.loanPosition({nRest:12,parcela:100,taxaMes:2,liq:900}).interestCents,r.interestCents);
+});
+test('zero rates and paid loans have zero future interest; missing data never becomes a zero balance',()=>{
+  const zero=C.loanPosition({nRest:3,parcela:100.01,taxaMes:0});assert.equal(zero.totalCents,30003);assert.equal(zero.principalCents,30003);assert.equal(zero.interestCents,0);
+  const paid=C.loanPosition({nRest:10,parcela:50,taxaMes:2,quitada:true});assert.equal(paid.remaining,0);assert.equal(paid.totalCents,0);assert.equal(paid.interestCents,0);
+  const noRate=C.loanPosition({nRest:2,parcela:50});assert.equal(noRate.totalCents,10000);assert.equal(noRate.principalCents,null);assert.equal(noRate.interestCents,null);
+  for(const loan of [{parcela:50,taxaMes:2},{nRest:12,taxaMes:2},{nRest:-2,parcela:50,taxaMes:2},{nRest:2.5,parcela:50,taxaMes:2},{nRest:1e15,parcela:1e15,taxaMes:2}])assert.equal(C.loanPosition(loan).totalCents,null);
+  const tiny=C.loanPosition({nRest:12,parcela:100,taxaMes:0.000000001});assert.equal(tiny.totalCents,tiny.principalCents+tiny.interestCents);assert.ok(Number.isFinite(tiny.principalCents));
+});
