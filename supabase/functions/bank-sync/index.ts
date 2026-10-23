@@ -1,4 +1,5 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.115.0';
+import { normalizeTransactions } from './transactions.mjs';
 
 const cors = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type', 'Access-Control-Allow-Methods': 'POST, OPTIONS' };
 const json = (body: unknown, status=200) => new Response(JSON.stringify(body), {status, headers:{...cors,'Content-Type':'application/json','Cache-Control':'no-store'}});
@@ -21,7 +22,7 @@ Deno.serve(async req => {
     const clientSecret=Deno.env.get('PLUGGY_CLIENT_SECRET')||(uuid(clientId)?Deno.env.get(clientId):undefined);
     if(body.action==='status')return json({configured:!!clientId&&!!clientSecret});
     if(!clientId||!clientSecret)return json({error:'Configure PLUGGY_CLIENT_ID e PLUGGY_CLIENT_SECRET nos secrets do Supabase.'},503);
-    if(!['attach','sync','verify'].includes(body.action))return json({error:'Ação inválida.'},400);
+    if(!['attach','inspect','sync','verify'].includes(body.action))return json({error:'Ação inválida.'},400);
     const db=createClient(url,Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,{auth:{persistSession:false},global:{fetch:boundedFetch}});
     const checked = (r: {data: any,error: any})=>{if(r.error)throw new Error('Falha ao salvar ou consultar dados no Supabase.');return r.data;};
     const api=async(path:string,apiKey?:string,payload?:unknown)=>{
@@ -34,20 +35,21 @@ Deno.serve(async req => {
       if(!uuid(body.accountId))return json({error:'Conta inválida.'},400);
       stored=checked(await db.from('bank_accounts').select('*').eq('id',body.accountId).eq('owner_id',user.id).maybeSingle());
       if(!stored?.provider_id||!stored.item_id)return json({error:'Conta não vinculada para este usuário.'},404);
-    } else if(body.action==='attach'&&(!uuid(body.itemId)||!['Erwin','Raquel'].includes(body.person)||!['Itaú','Santander','Banco do Brasil','Nubank'].includes(body.bank)))return json({error:'Informe banco, titular e itemId válidos.'},400);
+    } else if(['attach','inspect'].includes(body.action)&&(!uuid(body.itemId)||(body.action==='attach'&&(!['Erwin','Raquel'].includes(body.person)||!['Itaú','Santander','Banco do Brasil','Nubank'].includes(body.bank)))))return json({error:'Informe banco, titular e itemId válidos.'},400);
     const {apiKey}=await api('/auth',undefined,{clientId,clientSecret});
     if(body.action==='verify')return json({valid:!!apiKey});
     const itemId=stored?.item_id||body.itemId;
     const item=await api('/items/'+encodeURIComponent(itemId),apiKey);
     if(item.consentExpiresAt&&new Date(item.consentExpiresAt).getTime()<=Date.now())return json({error:'Consentimento expirado. Autorize novamente no Meu Pluggy e confira o novo itemId.'},409);
     if(item.status==='LOGIN_ERROR'||item.status==='OUTDATED'||item.executionStatus==='ERROR')return json({error:'A conexão precisa de atenção no Meu Pluggy. Confira a autorização bancária.'},409);
-    if(body.action==='attach'){
+    if(['attach','inspect'].includes(body.action)){
       // This private app accepts only the personal-use connector; it never starts paid bank connections.
       if(item.connector?.id!==200)return json({error:'Use o conector MeuPluggy (200) da sua aplicação, conforme o guia de uso pessoal.'},400);
       let results:any[]=[],page=1,totalPages=1;
       do{const r=await api(`/accounts?itemId=${encodeURIComponent(itemId)}&page=${page}&pageSize=500`,apiKey);results.push(...r.results);totalPages=r.totalPages||1;page++;if(page>20)throw new Error('Muitas contas na conexão. Contate o suporte do provedor.');}while(page<=totalPages);
       results=results.filter(a=>a.currencyCode==='BRL');
       if(!results.length)return json({error:'Nenhuma conta em BRL disponível. Confira os consentimentos no Meu Pluggy.'},409);
+      if(body.action==='inspect')return json({accounts:results.map(a=>({name:a.name,type:a.type,currency:a.currencyCode}))});
       const existing=checked(await db.from('bank_accounts').select('*').eq('owner_id',user.id));
       for(const a of results){
         const kind=a.type==='CREDIT'?'credit':'checking';
@@ -68,7 +70,7 @@ Deno.serve(async req => {
     params.set('accountId',stored.provider_id);
     const batch=await api('/v2/transactions?'+params.toString(),apiKey);
     if(batch.results.length>500)throw new Error('O provedor retornou uma página maior que o limite esperado.');
-    const rows=batch.results.filter((t:any)=>t.accountId===stored.provider_id&&t.currencyCode==='BRL'&&t.status==='POSTED'&&Number.isFinite(t.amount)&&t.amount!==0).map((t:any)=>({external_id:'pluggy:'+(t.providerId||t.id),booked_on:t.date.slice(0,10),description:String(t.description||'Lançamento bancário').slice(0,500),amount:t.type==='DEBIT'?-Math.abs(t.amount):t.type==='CREDIT'?Math.abs(t.amount):t.amount}));
+    const rows=normalizeTransactions(batch.results,stored.provider_id,stored.kind);
     const count=rows.length?checked(await db.rpc('ingest_bank_transactions',{p_account:stored.id,p_rows:rows})):0;
     if(!batch.next){const a=await api('/accounts/'+encodeURIComponent(stored.provider_id),apiKey);checked(await db.from('bank_accounts').update({balance:a.balance,balance_at:new Date().toISOString()}).eq('id',stored.id).eq('owner_id',user.id));}
     return json({count,next:batch.next||null});

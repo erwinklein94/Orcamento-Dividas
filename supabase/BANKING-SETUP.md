@@ -5,6 +5,7 @@ O módulo `bancos.html` preserva o orçamento, dívidas, simulador e áreas da v
 ## Pronto para uso
 
 - Visão geral com receitas, despesas, resultado, gastos por categoria, dia e titular.
+- Saldos bancários atuais separados dos gastos mensais e dos cartões; quantidade de conexões e data da consulta. Uma falha em uma conta não impede a sincronização das demais.
 - Extrato com filtros por mês, conta, titular e busca; classificação de categoria e tratamento.
 - Contas bancárias e cartões separados; valores em BRL. Cartões seguem a data da compra fornecida pelo banco. Pagamentos de fatura e transferências devem ser classificados como transferência para não duplicar despesas.
 - Lançamentos manuais, importação CSV/OFX com prévia e exportação CSV.
@@ -44,6 +45,8 @@ Use OFX com moeda BRL ou CSV UTF-8/Windows-1252 com colunas `data`, `descrição
 Identificação: FITID no OFX, id no CSV, ou hash de data/descrição/valor com número de ocorrência. Reimportar a mesma origem na mesma conta preserva registros e classificação. Sem IDs estáveis, extratos parcialmente sobrepostos com compras idênticas podem exigir conferência. Origens diferentes (CSV, OFX, API) não são conciliadas automaticamente; prefira uma única origem por conta/período. A importação é feita em lotes; em falha parcial, reenviar o mesmo arquivo retoma sem duplicar os lotes já salvos.
 
 A sincronização atualiza valores, datas e descrições mantendo categorias e tratamento escolhidos. Ela não apaga lançamentos ausentes ou removidos no provedor; uma exclusão/estorno precisa ser conferido no extrato. Os saldos são snapshots da API, não o resultado dos extratos importados.
+
+Novos lançamentos da API recebem sugestões locais de categoria por descrições reconhecidas, sem contratar o enriquecimento do provedor. Pagamentos explicitamente identificados como fatura são inicialmente classificados como transferência para não contar a fatura e as compras duas vezes; Pix genérico não é excluído automaticamente. Revise essas sugestões no Extrato. `banking-classification.sql` atualiza somente a ingestão; ressincronizar preserva a classificação já salva.
 
 ## Validação
 
