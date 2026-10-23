@@ -1,6 +1,6 @@
 // Shared shell for the life-area pages: login check, sidebar and revision-checked cloud saves.
 const LifeShell = (() => {
-  const AREAS = [['index.html','Finanças'],['saude.html','Saúde'],['habitos.html','Hábitos'],
+  const AREAS = [['index.html','Finanças'],['bancos.html','Finanças reais'],['saude.html','Saúde'],['habitos.html','Hábitos'],
     ['lazer.html','Lazer e Viagens'],['pets.html','Pets'],['carreira.html','Carreira e Estudos']];
   const PEOPLE = [['todos','Todos'],['Erwin','Erwin'],['Raquel','Raquel']];
   const PERSON_KEY = 'klein-life-person';

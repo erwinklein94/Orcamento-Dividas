@@ -6,7 +6,7 @@
   const signup=document.getElementById('signupButton');
   let loading=false, currentUser, authEpoch=0;
   // Área da vida que pediu login; só páginas conhecidas, nunca URLs externas.
-  const next=['saude.html','habitos.html','lazer.html','pets.html','carreira.html'].find(p=>p===new URLSearchParams(location.search).get('next'));
+  const next=['bancos.html','saude.html','habitos.html','lazer.html','pets.html','carreira.html'].find(p=>p===new URLSearchParams(location.search).get('next'));
   loginEmail.value=FINANCE_CONFIG.email;
   function fail(text){errorEl.textContent=text;}
   async function open(user){
