@@ -1,5 +1,6 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.115.0';
 import { normalizeTransactions } from './transactions.mjs';
+import { normalizeLoans } from './loans.mjs';
 
 const cors = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type', 'Access-Control-Allow-Methods': 'POST, OPTIONS' };
 const json = (body: unknown, status=200) => new Response(JSON.stringify(body), {status, headers:{...cors,'Content-Type':'application/json','Cache-Control':'no-store'}});
@@ -22,7 +23,7 @@ Deno.serve(async req => {
     const clientSecret=Deno.env.get('PLUGGY_CLIENT_SECRET')||(uuid(clientId)?Deno.env.get(clientId):undefined);
     if(body.action==='status')return json({configured:!!clientId&&!!clientSecret});
     if(!clientId||!clientSecret)return json({error:'Configure PLUGGY_CLIENT_ID e PLUGGY_CLIENT_SECRET nos secrets do Supabase.'},503);
-    if(!['attach','inspect','sync','verify','connect-token'].includes(body.action))return json({error:'Ação inválida.'},400);
+    if(!['attach','inspect','sync','verify','connect-token','loans'].includes(body.action))return json({error:'Ação inválida.'},400);
     const db=createClient(url,Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,{auth:{persistSession:false},global:{fetch:boundedFetch}});
     const checked = (r: {data: any,error: any})=>{if(r.error)throw new Error('Falha ao salvar ou consultar dados no Supabase.');return r.data;};
     const api=async(path:string,apiKey?:string,payload?:unknown)=>{
@@ -31,7 +32,11 @@ Deno.serve(async req => {
       return response.json();
     };
     let stored:any;
-    if(body.action==='sync'){
+    if(body.action==='loans'){
+      if(!uuid(body.itemId))return json({error:'Conexão inválida.'},400);
+      stored=checked(await db.from('bank_accounts').select('*').eq('item_id',body.itemId).eq('owner_id',user.id).limit(1).maybeSingle());
+      if(!stored)return json({error:'Conexão não vinculada para este usuário.'},404);
+    } else if(body.action==='sync'){
       if(!uuid(body.accountId))return json({error:'Conta inválida.'},400);
       stored=checked(await db.from('bank_accounts').select('*').eq('id',body.accountId).eq('owner_id',user.id).maybeSingle());
       if(!stored?.provider_id||!stored.item_id)return json({error:'Conta não vinculada para este usuário.'},404);
@@ -46,6 +51,17 @@ Deno.serve(async req => {
     const item=await api('/items/'+encodeURIComponent(itemId),apiKey);
     if(item.consentExpiresAt&&new Date(item.consentExpiresAt).getTime()<=Date.now())return json({error:'Consentimento expirado. Autorize novamente no Meu Pluggy e confira o novo itemId.'},409);
     if(item.status==='LOGIN_ERROR'||item.status==='OUTDATED'||item.executionStatus==='ERROR')return json({error:'A conexão precisa de atenção no Meu Pluggy. Confira a autorização bancária.'},409);
+    if(body.action==='loans'){
+      // Query collected resources only: never expand products or start a new consent here.
+      const collected=Array.isArray(item.products)&&item.products.includes('LOANS');
+      const loanStatus=item.statusDetail?.loans?.status;
+      if(loanStatus&&['ERROR','FAILED','PARTIAL_SUCCESS'].includes(loanStatus))return json({error:'O banco informou uma pendência na coleta de empréstimos. Os dados anteriores foram preservados.'},409);
+      let results:any[]=[];
+      if(collected){let page=1,totalPages=1;do{const batch=await api(`/loans?itemId=${encodeURIComponent(stored.item_id)}&page=${page}&pageSize=500`,apiKey);if(!Array.isArray(batch.results))throw new Error('Resposta de empréstimos inválida.');results.push(...batch.results);totalPages=batch.totalPages||1;page++;if(page>20)throw new Error('Muitos contratos na conexão.');}while(page<=totalPages);}
+      const loans=normalizeLoans(results,stored.item_id),coverage=collected?(loans.length?'available':'empty'):'unavailable';
+      checked(await db.from('bank_loan_snapshots').upsert({owner_id:user.id,item_id:stored.item_id,bank:stored.bank,person:stored.person,loans,coverage,checked_at:new Date().toISOString()},{onConflict:'owner_id,item_id'}));
+      return json({count:loans.length,coverage});
+    }
     if(['attach','inspect'].includes(body.action)){
       // This private app accepts only the personal-use connector; it never starts paid bank connections.
       if(item.connector?.id!==200)return json({error:'Use o conector MeuPluggy (200) da sua aplicação, conforme o guia de uso pessoal.'},400);
