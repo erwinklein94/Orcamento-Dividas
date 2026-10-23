@@ -15,7 +15,10 @@ Deno.serve(async req => {
     const {data:{user},error}=await auth.auth.getUser();
     if(error||!user||!user.email_confirmed_at||user.email?.toLowerCase()!==ownerEmail)return json({error:'Acesso não autorizado.'},401);
     const body=await req.json();
-    const clientId=Deno.env.get('PLUGGY_CLIENT_ID'),clientSecret=Deno.env.get('PLUGGY_CLIENT_SECRET');
+    const clientId=Deno.env.get('PLUGGY_CLIENT_ID');
+    // Compatibility with the existing secret saved under the application's UUID.
+    // Only a UUID alias is allowed, so this cannot resolve reserved platform keys.
+    const clientSecret=Deno.env.get('PLUGGY_CLIENT_SECRET')||(uuid(clientId)?Deno.env.get(clientId):undefined);
     if(body.action==='status')return json({configured:!!clientId&&!!clientSecret});
     if(!clientId||!clientSecret)return json({error:'Configure PLUGGY_CLIENT_ID e PLUGGY_CLIENT_SECRET nos secrets do Supabase.'},503);
     if(!['attach','sync','verify'].includes(body.action))return json({error:'Ação inválida.'},400);
